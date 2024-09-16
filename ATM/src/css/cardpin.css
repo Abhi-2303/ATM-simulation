@@ -1,0 +1,101 @@
+  
+  body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+      background: linear-gradient(135deg, #f0f4f8, #e0e6ed);
+      font-family: 'Roboto', sans-serif;
+    }
+
+    .card-container {
+      background: #ffffff;
+      border-radius: 20px;
+      box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+      padding: 2rem;
+      text-align: center;
+      width: 360px;
+      border: 1px solid #e2e8f0;
+      transition: box-shadow 0.3s, transform 0.3s;
+    }
+
+    .card-container:hover {
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+      transform: translateY(-5px);
+    }
+
+    h1 {
+      font-size: 1.75rem;
+      margin-bottom: 1.5rem;
+      color: #2d3748;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+
+
+
+    .input {
+      display: flex;
+      align-items: center;
+      margin: 0 auto;
+      justify-content: space-between;
+      width: 80%;
+    }
+
+    .input input {
+        height: 3rem;
+        font-size: 1.5rem;
+        text-align: center;
+        border: 2px solid #e2e8f0;
+        border-radius: 12px;
+        background: #fafafa;
+        box-sizing: border-box;
+        transition: border-color 0.3s, box-shadow 0.3s;
+    }
+    .pin-input {
+      width: 3rem;
+    }
+    .cardNO{
+            width: 100%;
+    }
+
+    .input input:focus {
+        background: #ffffff;
+        box-shadow: 0 0 8px #5a95d84d;
+        outline: none;
+        
+        border-color: #4a90e2;
+    }
+
+    .button {
+      margin-top: 2rem;
+    }
+
+    .button button {
+      font-size: 1.25rem;
+      padding: 0.75rem 1.5rem;
+      border: none;
+      border-radius: 8px;
+      color: white;
+      cursor: pointer;
+      transition: background 0.3s, transform 0.3s, box-shadow 0.3s;
+      background: linear-gradient(145deg, #4a90e2, #357abd);
+    }
+
+    .button button:hover {
+        transform: scale(1.05);
+        box-shadow: 0 4px 12px #00000033;
+        background: linear-gradient(145deg, #357abd, #2a5caa);
+    }
+
+    .button button:active {
+      transform: scale(0.95);
+      box-shadow: 0 2px 4px #00000033;
+    }
+
+.error-message {
+  color: red;
+  font-size: xx-small;
+  margin-top: 2em;
+}

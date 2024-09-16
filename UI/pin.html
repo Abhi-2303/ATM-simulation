@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title> PIN Entry</title>
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #f0f4f8, #e0e6ed);
+        }
+
+        .card-container {
+            width: 360px;
+            padding: 2rem;
+            text-align: center;
+            border-radius: 20px;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+            transition: box-shadow 0.3s, transform 0.3s;
+        }
+
+        .card-container:hover {
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+            transform: translateY(-5px);
+        }
+
+        h1 {
+            color: #2d3748;
+            font-weight: 600;
+            font-size: 1.75rem;
+            margin-bottom: 1.5rem;
+            letter-spacing: 0.5px;
+        }
+
+
+
+        .input {
+            width: 80%;
+            display: flex;
+            margin: 0 auto;
+            justify-content: space-between;
+        }
+
+        .input input {
+            width: 3rem;
+            height: 3rem;
+            font-size: 2rem;
+            text-align: center;
+            border-radius: 12px;
+            background: #fafafa;
+            box-sizing: border-box;
+            border: 2px solid #e2e8f0;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        .input input:focus {
+            outline: none;
+            background: #ffffff;
+            border-color: #4a90e2;
+            box-shadow: 0 0 8px #5a95d84d;
+
+        }
+
+        .button {
+            margin-top: 2rem;
+        }
+
+        .button button {
+            border: none;
+            color: white;
+            cursor: pointer;
+            font-size: 1.25rem;
+            border-radius: 8px;
+            padding: 0.75rem 1.5rem;
+            background: linear-gradient(145deg, #4a90e2, #357abd);
+            transition: background 0.3s, transform 0.3s, box-shadow 0.3s;
+        }
+
+        .button button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px #00000033;
+            background: linear-gradient(145deg, #357abd, #2a5caa);
+        }
+
+        .button button:active {
+            transform: scale(0.95);
+            box-shadow: 0 2px 4px #00000033;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="card-container">
+        <h1>Enter PIN Here</h1>
+        <div class="input">
+
+            <input type="tel" name="pin_1" class="pin_number" maxlength="1">
+            <input type="tel" name="pin_2" class="pin_number" maxlength="1">
+            <input type="tel" name="pin_3" class="pin_number" maxlength="1">
+            <input type="tel" name="pin_4" class="pin_number" maxlength="1">
+
+        </div>
+        <div class="button">
+            <button>Submit</button>
+        </div>
+    </div>
+
+<script>
+    const inputs = document.querySelectorAll('.pin_number');
+
+    inputs.forEach((input, index) => {
+        input.addEventListener('keyup', (e) => {
+            if (e.target.value.length === 1) {
+                if (index < inputs.length - 1) {
+                    inputs[index + 1].focus();
+                }
+            } else if (e.key === 'Backspace' && e.target.value.length === 0) {
+                if (index > 0) {
+                    inputs[index - 1].focus();
+                }
+            }
+        });
+    });
+</script>
+</body>
+
+</html>

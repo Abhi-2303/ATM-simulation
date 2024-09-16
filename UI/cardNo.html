@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Card Input</title>
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #f0f4f8, #e0e6ed);
+        }
+
+
+        .card-container {
+            width: 360px;
+            padding: 2rem;
+            text-align: center;
+            border-radius: 20px;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+            transition: box-shadow 0.3s, transform 0.3s;
+        }
+
+
+        .card-container:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        h1 {
+            color: #2d3748;
+            font-weight: 600;
+            font-size: 1.75rem;
+            margin-bottom: 1.5rem;
+            letter-spacing: 0.5px;
+        }
+
+        .input {
+            display: flex;
+            margin: 0 auto;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .input input {
+            height: 3rem;
+            font-size: 2rem;
+            text-align: center;
+            border-radius: 12px;
+            background: #fafafa;
+            box-sizing: border-box;
+            border: 2px solid #e2e8f0;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        .input input:focus {
+            outline: none;
+            background: #ffffff;
+            border-color: #5a67d8;
+            box-shadow: 0 0 8px #5a67d84d;
+        }
+
+        .button {
+            margin-top: 2rem;
+        }
+
+        .button button {
+            border: none;
+            color: white;
+            cursor: pointer;
+            border-radius: 8px;
+            font-size: 1.25rem;
+            padding: 0.75rem 1.75rem;
+            background: linear-gradient(145deg, #5a67d8, #4c51bf);
+            transition: background 0.3s, transform 0.3s, box-shadow 0.3s;
+        }
+
+        .button button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px #00000033;
+            background: linear-gradient(145deg, #4c51bf, #434190);
+        }
+
+        .button button:active {
+            transform: scale(0.95);
+            box-shadow: 0 2px 4px #00000033;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="card-container">
+        <h1>Enter Card Number</h1>
+        <div class="input">
+            <input type="number" name="card_number" id="card_number" placeholder="xxxx xxxx xxxx" maxlength="12">
+        </div>
+        <div class="button">
+            <button>Continue </button>
+        </div>
+    </div>
+</body>
+
+</html>
