@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import axios from 'axios';
 import Input from './input';
 import Pininp from './pinInp';
 import '../css/cardpin.css';
@@ -11,12 +12,35 @@ function CardPin() {
 
   const titles = ["Enter Card Number", "Enter Your PIN"];
 
-  const handleNextStep = () => {
+  const handleNextStep = async () => {
     if (currentStep === 0 && cardNumber.length === 12) {
-      setCurrentStep(1);
+      try {
+        const response = await axios.post('http://localhost:5000/api/login', { cardNumber });
+        if (response.status === 200 && response.data.message === 'Card found, please enter your PIN') {
+          setCurrentStep(1);
+          setError("");
+        }
+      } catch (err) {
+        if (err.response && err.response.status === 404) {
+          setError('Card not found');
+        } else {
+          setError('Error connecting to server');
+        }
+      }
     } else if (currentStep === 1 && pin.length === 4) {
-      // Handle form submission here
-      alert('Form Submitted');
+      try {
+        const response = await axios.post('http://localhost:5000/api/login', { cardNumber, pin });
+        if (response.status === 200) {
+          alert('Login successful!');
+          // window.location.href = '/dashboard';
+        }
+      } catch (err) {
+        if (err.response && err.response.status === 400) {
+          setError('Invalid PIN');
+        } else {
+          setError('Error connecting to server');
+        }
+      }
     } else {
       setError("Please complete the required input");
     }
