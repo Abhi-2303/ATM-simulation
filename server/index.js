@@ -2,8 +2,10 @@ const express = require('express');
 const cors = require('cors');
 const pool = require('./db');
 const { comparePassword } = require('./hashed_pass'); 
+const jwt = require('jsonwebtoken');
 
 const app = express();
+const JWT_SECRET = process.env.JWT_SECRET;
 
 app.use(cors());
 app.use(express.json());
@@ -29,7 +31,9 @@ app.post('/api/login', async (req, res) => {
       return res.status(400).json({ message: 'Invalid PIN' });
     }
 
-    res.json({ message: 'Login successful!', user: rows[0] });
+    const token = jwt.sign({ cardNumber: rows[0].Card_No }, JWT_SECRET, { expiresIn: '1h' });      // JWT token
+    res.json({ message: 'Login successful!', token });
+
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Error connecting to PostgreSQL' });

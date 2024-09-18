@@ -3,12 +3,14 @@ import axios from 'axios';
 import Input from './input';
 import Pininp from './pinInp';
 import '../css/cardpin.css';
+import { useNavigate } from 'react-router-dom';
 
 function CardPin() {
   const [currentStep, setCurrentStep] = useState(0);
   const [cardNumber, setCardNumber] = useState("");
   const [pin, setPin] = useState("");
   const [error, setError] = useState("");
+  const navigate = useNavigate();
 
   const titles = ["Enter Card Number", "Enter Your PIN"];
 
@@ -32,7 +34,8 @@ function CardPin() {
         const response = await axios.post('http://localhost:5000/api/login', { cardNumber, pin });
         if (response.status === 200) {
           alert('Login successful!');
-          // window.location.href = '/dashboard';
+          localStorage.setItem('token', response.data.token); 
+          navigate('/dashboard');
         }
       } catch (err) {
         if (err.response && err.response.status === 400) {
