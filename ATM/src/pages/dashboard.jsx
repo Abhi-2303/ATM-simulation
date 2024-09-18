@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import axios from 'axios';
 import '../css/dashboard.css';
 import { useNavigate } from 'react-router-dom';
 
@@ -11,25 +12,45 @@ const GRID_ITEMS = [
     { id: 'change-pin', src: 'icons/reset-password.png', text: 'Change PIN', path: '/change-pin' },
 ];
 
-const user = "Avi";
-const tstatus = "withdrawal";
-const amount = "1000.00";
-const dateNtime = "23 Sep,2024 19:34:22";
-
 const Dashboard = () => {
-    const navigate = useNavigate(); // Move useNavigate inside the component
+    const [userData, setUserData] = useState({});
 
-    const handleNextStep = () => {
-        navigate('/withdrawal');
-    };
+    const navigate = useNavigate();
 
+    useEffect(() => {
+        const fetchData = async () => {
+            const token = localStorage.getItem('token'); 
+
+            if (token) {
+                try {
+                    const response = await axios.get('http://localhost:5000/api/dashboard', {
+                        headers: {
+                            Authorization: `Bearer ${token}`,
+                        },
+                    });
+
+                    if (response.status === 200) {
+                        setUserData(response.data);
+                    }
+                } catch (error) {
+                    console.error('Error fetching data:', error);
+                }
+            }
+            else {
+                navigate('/cardpin'); 
+                return;
+            }
+        };
+
+        fetchData();
+    }, []);
     return (
         <div className="container">
-            <h1>Welcome, {user}!</h1>
+            <h1>Welcome, {userData.customer_name}!</h1>
             <div className="prev-tran">
-                <strong className="box box-1">{tstatus}</strong>
-                <div className="box box-2">{dateNtime}</div>
-                <div className="box box-3">₹{amount}</div>
+                <strong className="box box-1">{userData.transaction_type}</strong>
+                <div className="box box-2">{userData.date_time}</div>
+                <div className="box box-3">₹{userData.amount}</div>
             </div>
             <hr />
             <div className="grid">
