@@ -19,7 +19,7 @@ const Dashboard = () => {
 
     useEffect(() => {
         const fetchData = async () => {
-            const token = localStorage.getItem('token'); 
+            const token = localStorage.getItem('token');
 
             if (token) {
                 try {
@@ -31,26 +31,40 @@ const Dashboard = () => {
 
                     if (response.status === 200) {
                         setUserData(response.data);
+                    } else {
+                        // Handle other non-200 responses
+                        handleTokenExpiry();
                     }
                 } catch (error) {
-                    console.error('Error fetching data:', error);
+                    if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+                        // Token expired or unauthorized, handle expiration
+                        handleTokenExpiry();
+                    } else {
+                        console.error('Error fetching data:', error);
+                    }
                 }
-            }
+            } 
             else {
-                navigate('/cardpin'); 
-                return;
+                navigate('/');
+
             }
         };
 
+        const handleTokenExpiry = () => {
+            localStorage.removeItem('token');
+            navigate('/');
+        };
+
         fetchData();
-    }, []);
+    }, [navigate]);
+
     return (
         <div className="container">
-            <h1>Welcome, {userData.customer_name}!</h1>
+            <h1>Welcome, {userData.customer_name || 'User'}!</h1>
             <div className="prev-tran">
-                <strong className="box box-1">{userData.transaction_type}</strong>
-                <div className="box box-2">{userData.date_time}</div>
-                <div className="box box-3">₹{userData.amount}</div>
+                <strong className="box box-1">{userData.transaction_type || 'Transaction'}</strong>
+                <div className="box box-2">{userData.date_time || 'Date'}</div>
+                <div className="box box-3">₹{userData.amount || '0.00'}</div>
             </div>
             <hr />
             <div className="grid">

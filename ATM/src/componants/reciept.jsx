@@ -1,33 +1,26 @@
-import React from 'react'
-import '../css/reciept.css'
+import React from 'react';
+import "../css/reciept.css"
 
-const BankName = "Name Of Bank";
-const currentDate = "Sep 2, 2024";
-const atmid = "ATM0012345";
-const branch = "BANK BRANCH NAME";
-const accNo = "12******3456";
-const name = "JOY LONARE";
-const availBAL = "10,000.85";
-const CONT = "6000122201";
-const website = "abcbank.in";
-
-
-const ITEMS = [
-    { tag: "Account No", value: accNo },
-    { tag: "Account Holder", value: name },
-];
-
-let trans = [];
-
-function Reciept() {
+const Receipt = ({ data }) => {
+    const {
+        bankName,
+        currentDate,
+        atmId,
+        branch,
+        ITEMS = [],
+        trans = [],
+        availBAL,
+        CONT,
+        website,
+    } = data || {};
 
     return (
         <div className="recieptBox">
             <div className="header">
-                <h1>{BankName}</h1>
+                <h1>{bankName}</h1>
                 <sup>{currentDate}</sup>
                 <div>
-                    <span>ATM ID: {atmid}</span>
+                    <span>ATM ID: {atmId}</span>
                     <span>{branch}</span>
                 </div>
             </div>
@@ -47,7 +40,7 @@ function Reciept() {
 
                 <hr />
                 <div className="info">
-                    {trans && trans.length > 0 && (
+                    {trans.length > 0 && (
                         <table>
                             <thead>
                                 <tr>
@@ -74,12 +67,11 @@ function Reciept() {
                 </div>
             </div>
             <div className="message">
-                <p>For assistance, call: <a href={`tel:${CONT}`}>{CONT}</a> or visit our {website}.</p>
+                <p>For assistance, call: <a href={`tel:${CONT}`}>{CONT}</a> or visit our  <a href={`${website}`}>{website}</a>.</p>
                 <p>Never share your PIN with anyone.</p>
             </div>
         </div>
-    )
+    );
 }
 
-export default Reciept
-
+export default Receipt;

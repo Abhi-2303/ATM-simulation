@@ -1,51 +1,106 @@
 import React, { useState } from 'react';
+import axios from 'axios';
+import { useNavigate } from 'react-router-dom'; 
 import '../css/cardpin.css';
 import Pininp from '../componants/pinInp';
 
 function ChangePIN() {
-  const [currentStep, setCurrentStep] = useState(0);
-  const [oldPin, setOldPin] = useState('');
-  const [newPin, setNewPin] = useState('');
-  const [reenterPin, setReenterPin] = useState('');
+  const [step, setStep] = useState(0);
+  const [pins, setPins] = useState({
+    oldPin: '',
+    newPin: '',
+    confirmPin: ''
+  });
+  const [error, setError] = useState('');
+
+  const navigate = useNavigate(); 
 
   const titles = ["Enter Old PIN", "Enter New PIN", "Re-enter New PIN"];
 
-  const handleContinue = () => {
-    if (currentStep === 0 && oldPin.length === 4) {
-      setCurrentStep(1);
-    } else if (currentStep === 1 && newPin.length === 4) {
-      setCurrentStep(2);
-    } else if (currentStep === 2 && reenterPin.length === 4) {
-      if (newPin === reenterPin) {
-        alert("PIN successfully changed!");
-        setCurrentStep(0);
-      } else {
-        alert("Pins do not match. Please try again.");
+  const handleContinue = async () => {
+    const { oldPin, newPin, confirmPin } = pins;
+    const token = localStorage.getItem('token');
+
+    try {
+      if (step === 0) {
+        if (oldPin.length === 4) {
+          const response = await axios.post(
+            'http://localhost:5000/api/change-pin',
+            { oldPin },
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+
+          if (response.data.message === 'New PIN is required') {
+            setStep(1);
+            setError('');
+          } else {
+            setError('Invalid old PIN. Please try again.');
+          }
+        } else {
+          setError('Please enter a 4-digit PIN.');
+        }
+      } else if (step === 1) {
+        if (newPin.length === 4) {
+          setStep(2);
+          setError('');
+        } else {
+          setError('Please enter a 4-digit new PIN.');
+        }
+      } else if (step === 2) {
+        if (confirmPin.length === 4) {
+          if (newPin === confirmPin) {
+            const response = await axios.post(
+              'http://localhost:5000/api/change-pin',
+              { oldPin, newPin },
+              { headers: { Authorization: `Bearer ${token}` } }
+            );
+
+            if (response.data.message === 'PIN updated successfully!') {
+              alert('PIN changed successfully!');
+              navigate('/dashboard'); 
+            } else {
+              setError(response.data.message || 'Error changing PIN');
+            }
+          } else {
+            setError('Pins do not match. Please try again.');
+          }
+        } else {
+          setError('Please re-enter the 4-digit new PIN.');
+        }
       }
+    } catch (error) {
+      setError(error.response?.data.message || 'Error processing your request');
     }
   };
 
   const handlePinInput = (pin) => {
-    if (currentStep === 0) {
-      setOldPin(pin);
-    } else if (currentStep === 1) {
-      setNewPin(pin);
-    } else if (currentStep === 2) {
-      setReenterPin(pin);
-    }
+    setPins((prevPins) => {
+      if (step === 0) {
+        return { ...prevPins, oldPin: pin };
+      } else if (step === 1) {
+        return { ...prevPins, newPin: pin };
+      } else if (step === 2) {
+        return { ...prevPins, confirmPin: pin };
+      }
+    });
   };
 
   return (
     <div className="card-container">
-      <h1>{titles[currentStep]}</h1>
+      <h1>{titles[step]}</h1>
       <div className="input">
-        <Pininp key="pininp" value={currentStep === 0 ? oldPin : currentStep === 1 ? newPin : reenterPin} setValue={handlePinInput} />
+        <Pininp
+          key="pininp"
+          value={step === 0 ? pins.oldPin : step === 1 ? pins.newPin : pins.confirmPin}
+          setValue={handlePinInput}
+        />
       </div>
       <div className="button">
         <button onClick={handleContinue}>
-          {currentStep === 2 ? 'Submit' : 'Continue'}
+          {step === 2 ? 'Submit' : 'Continue'}
         </button>
       </div>
+      {error && <p className="error-message">{error}</p>}
     </div>
   );
 }

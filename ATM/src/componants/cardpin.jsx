@@ -33,7 +33,6 @@ function CardPin() {
       try {
         const response = await axios.post('http://localhost:5000/api/login', { cardNumber, pin });
         if (response.status === 200) {
-          alert('Login successful!');
           localStorage.setItem('token', response.data.token); 
           navigate('/dashboard');
         }
