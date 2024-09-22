@@ -43,7 +43,7 @@ const Dashboard = () => {
                         console.error('Error fetching data:', error);
                     }
                 }
-            } 
+            }
             else {
                 navigate('/');
 
@@ -60,7 +60,7 @@ const Dashboard = () => {
 
     return (
         <div className="container">
-            <h1>Welcome, {userData.customer_name || 'User'}!</h1>
+            <h2>Welcome, {userData.customer_name || 'User'}!</h2>
             <div className="prev-tran">
                 <strong className="box box-1">{userData.transaction_type || 'Transaction'}</strong>
                 <div className="box box-2">{userData.date_time || 'Date'}</div>

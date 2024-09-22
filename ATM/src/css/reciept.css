@@ -27,11 +27,11 @@
       color: #333;
   }
 
-  .header sup, span {
+  .header sup {
       display: block;
       font-size: 13px;
       color: #666;
-      margin-top: 5px;
+      margin: 5px 0;
   }
 
 

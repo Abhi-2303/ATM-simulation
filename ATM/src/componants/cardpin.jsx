@@ -33,7 +33,7 @@ function CardPin() {
       try {
         const response = await axios.post('http://localhost:5000/api/login', { cardNumber, pin });
         if (response.status === 200) {
-          localStorage.setItem('token', response.data.token); 
+          localStorage.setItem('token', response.data.token);
           navigate('/dashboard');
         }
       } catch (err) {
@@ -55,12 +55,12 @@ function CardPin() {
 
   return (
     <div className="card-container">
-      <h1>{titles[currentStep]}</h1>
+      <h2>{titles[currentStep]}</h2>
       <div className="input">
         {steps[currentStep]}
       </div>
       <div className="button">
-        <button onClick={handleNextStep}>
+        <button className="continue" onClick={handleNextStep}>
           {currentStep === 1 ? "Submit" : "Continue"}
         </button>
       </div>

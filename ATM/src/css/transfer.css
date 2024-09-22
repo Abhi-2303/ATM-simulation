@@ -16,7 +16,7 @@ body {
 }
 
 .container {
-    max-width: 500px;
+    max-width: 400px;
     background: #ffffff5c;
     border-radius: 15px;
     box-shadow: 0 10px 30px #08076e46;
@@ -24,7 +24,7 @@ body {
     text-align: left;
     border: 1px solid #ffffff33;
     transition: transform 0.3s, box-shadow 0.3s;
-    backdrop-filter: blur(10px);
+    backdrop-filter: blur(5px);
     overflow: hidden;
 }
 
@@ -48,7 +48,7 @@ h2:after {
     display: block;
     width: 100px;
     height: 4px;
-    background-color: #1578b5;
+    background: linear-gradient(45deg, #57a0ed, #003f87);
     margin: 12px auto 0;
     border-radius: 2px;
 }
@@ -62,7 +62,7 @@ label {
     cursor: pointer;
     font-weight: 500;
     margin-bottom: 8px;
-    color: #333;
+    color: #114d89;
     padding: 8px 12px;
     background: #ffffff3f;
     border-radius: 8px;

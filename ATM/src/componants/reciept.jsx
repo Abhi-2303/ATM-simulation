@@ -20,8 +20,8 @@ const Receipt = ({ data }) => {
                 <h1>{bankName}</h1>
                 <sup>{currentDate}</sup>
                 <div>
-                    <span>ATM ID: {atmId}</span>
-                    <span>{branch}</span>
+                    <sup>ATM ID: {atmId}</sup>
+                    <sup>{branch}</sup>
                 </div>
             </div>
             <hr />
