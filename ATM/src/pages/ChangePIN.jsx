@@ -96,11 +96,11 @@ function ChangePIN() {
         />
       </div>
       <div className="button">
-        <button onClick={handleContinue}>
+        <button onClick={handleContinue} className="continue">
           {step === 2 ? 'Submit' : 'Continue'}
         </button>
       </div>
-      {error && <p className="error-message">{error}</p>}
+      {error && <p className="error">{error}</p>}
     </div>
   );
 }

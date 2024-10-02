@@ -1,21 +1,29 @@
-
 import React from 'react';
 
-const PaymentForm = () => {
+const PaymentForm = ({ beneficiaryName = '', accountNumber = '', setTransferData }) => {
+    const handleChange = (e) => {
+        const { id, value } = e.target;
+        setTransferData(prevState => ({ ...prevState, [id]: value }));
+    };
+
     return (
         <>
-            <label htmlFor="beneficiary_name">Beneficiary Full Name</label>
+            <label htmlFor="beneficiaryName">Beneficiary Full Name</label>
             <input
-                id="beneficiary_name"
+                id="beneficiaryName"
                 className="input-field"
                 type="text"
                 placeholder="Enter full name"
+                value={beneficiaryName}
+                onChange={handleChange}
             />
-            <label htmlFor="account_number">Account Number</label>
+            <label htmlFor="accountNumber">Account Number</label>
             <input
-                id="account_number"
+                id="accountNumber"
                 type="number"
                 placeholder="Enter account number"
+                value={accountNumber}
+                onChange={handleChange}
             />
         </>
     );

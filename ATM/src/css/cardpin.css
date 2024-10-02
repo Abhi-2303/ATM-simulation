@@ -22,8 +22,6 @@
       letter-spacing: 0.5px;
     }
 
-
-
     .input {
       display: flex;
       align-items: center;
@@ -67,10 +65,4 @@
     button:active {
       transform: scale(0.95);
       box-shadow: 0 2px 4px #00000033;
-    }
-
-    .error-message {
-      color: red;
-      font-size: xx-small;
-      margin-top: 2em;
     }

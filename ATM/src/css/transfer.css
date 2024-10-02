@@ -244,3 +244,10 @@ button {
     box-shadow: 0 6px 15px #005bbb4d;
     transform: translateY(-2px);
 }
+
+.error {
+    color: #ff2828;
+    font-size: xx-small;
+    margin-top: 2em;
+    text-align: center;
+}

@@ -64,7 +64,7 @@ function CardPin() {
           {currentStep === 1 ? "Submit" : "Continue"}
         </button>
       </div>
-      {error && <p className="error-message">{error}</p>}
+      {error && <p className="error">{error}</p>}
     </div>
   );
 }

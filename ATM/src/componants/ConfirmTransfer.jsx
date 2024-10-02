@@ -1,16 +1,18 @@
 import React from 'react';
 
-const ConfirmTransfer = () => {
+const ConfirmTransfer = ({ transferData }) => {
+    const { bank, beneficiaryName, accountNumber, amount } = transferData;
+
     return (
         <>
             <label>Recipient Bank:</label>
-            <input type="text" value="Selected Bank" readOnly />
+            <input type="text" value={bank} readOnly />
             <label>Recipient Account Number:</label>
-            <input type="text" value="123456789" readOnly />
+            <input type="text" value={accountNumber} readOnly />
             <label>Recipient Account Name:</label>
-            <input type="text" value="John Doe" readOnly />
+            <input type="text" value={beneficiaryName} readOnly />
             <label>Transfer Amount:</label>
-            <input type="text" value="$500.00" readOnly />
+            <input type="text" value={`₹${amount}`} readOnly />
         </>
     );
 };

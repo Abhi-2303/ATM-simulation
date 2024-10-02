@@ -2,7 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const pool = require('./db');
-const { comparePassword, hashPassword} = require('./hashed_pass');
+const { comparePassword, hashPassword } = require('./hashed_pass');
 const jwt = require('jsonwebtoken');
 
 const app = express();
@@ -168,7 +168,7 @@ app.post('/api/change-pin', verifyToken, async (req, res) => {
   const cardNumber = req.cardNumber;
 
   try {
- 
+
     const query = 'SELECT pin FROM card WHERE Card_No = $1';
     const { rows } = await pool.query(query, [cardNumber]);
 
@@ -182,7 +182,7 @@ app.post('/api/change-pin', verifyToken, async (req, res) => {
     if (!isMatch) {
       return res.status(400).json({ message: 'Invalid old PIN' });
     }
-    if(!newPin){
+    if (!newPin) {
       return res.json({ message: 'New PIN is required' });
     }
 
@@ -197,12 +197,128 @@ app.post('/api/change-pin', verifyToken, async (req, res) => {
   }
 });
 
+app.get('/api/banks', async (req, res) => {
+  try {
+    // Query to fetch bank list
+    const bankQuery = 'SELECT bank_name FROM Bank';
+    const { rows } = await pool.query(bankQuery);
+
+    if (rows.length === 0) {
+      return res.status(404).json({ message: 'No banks found' });
+    }
+
+    res.json(rows.map(row => row.bank_name)); // Return array of bank names
+  } catch (error) {
+    console.error('Error fetching bank list:', error.message);
+    res.status(500).json({ message: 'Error fetching bank list' });
+  }
+});
+
+app.post('/api/transfer', verifyToken, async (req, res) => {
+  try {
+    const {bank, name } = req.body;
+    const reciverAccNo = Number(req.body.reciverAccNo);
+    const amount = Number(req.body.amount);
+    const cardNumber = req.cardNumber;
+
+    await pool.query('BEGIN');
+
+    // Fetch sender's account number and balance
+    const senderAccQuery = `
+      SELECT a.Account_No, a.Balance 
+      FROM Account a
+      JOIN Card crd ON a.Account_No = crd.Account_No
+      WHERE crd.Card_No = $1
+    `;
+    const { rows: senderRows } = await pool.query(senderAccQuery, [cardNumber]);
+
+    if (senderRows.length === 0) {
+      await pool.query('ROLLBACK');
+      return res.status(404).json({ message: 'Sender account not found' });
+    }
+
+    const senderAccountNo = senderRows[0].account_no;
+    const senderBalance = senderRows[0].balance;
+
+    if (senderAccountNo === reciverAccNo) {
+      await pool.query('ROLLBACK');
+      return res.status(400).json({ message: 'You cannot transfer money to your own account' });
+    }
+
+    if (senderBalance < amount) {
+      await pool.query('ROLLBACK');
+      return res.status(400).json({ message: 'Insufficient balance' });
+    }
 
 
+    const receiverAccQuery = `
+      SELECT a.Account_No, c.Name, b.Bank_Name
+      FROM Account a
+      JOIN Customer c ON a.Customer_ID = c.Customer_ID
+      JOIN Bank b ON a.Bank_ID = b.Bank_ID
+      WHERE a.Account_No = $1 AND c.Name = $2;
+    `;
+    const { rows: receiverRows } = await pool.query(receiverAccQuery, [reciverAccNo, name]);
+
+    if (receiverRows.length === 0) {
+      await pool.query('ROLLBACK');
+      return res.status(404).json({ message: 'Beneficiary account not found' });
+    }
+
+    const beneficiaryBankName = receiverRows[0].bank_name;
+
+    if (beneficiaryBankName.toLowerCase() !== bank.toLowerCase()) {
+      await pool.query('ROLLBACK');
+      return res.json({ message: 'The selected bank does not correspond to the beneficiary’s bank.' });
+    }
 
 
+    if (isNaN(amount) || amount <= 0) {
+      await pool.query('ROLLBACK');
+      return res.json({ message: 'Invalid amount' });
+    }
+    if (amount){
 
-// Start the server
+      const deductSender = `
+      UPDATE Account
+      SET Balance = Balance - $1
+      WHERE Account_No = $2
+    `;
+      await pool.query(deductSender, [amount, senderAccountNo]);
+
+      const addReceiver = `
+      UPDATE Account
+      SET Balance = Balance + $1
+      WHERE Account_No = $2
+    `;
+      await pool.query(addReceiver, [amount, reciverAccNo]);
+
+      const transactionSenderQry = `
+      INSERT INTO Transaction (Transaction_Type, Amount, Date_Time, Account_No)
+      VALUES ('Transfer - Debit', $1, NOW(), $2)
+    `;
+      await pool.query(transactionSenderQry, [amount, senderAccountNo]);
+      console.log('Amount:', amount, 'Type:', typeof amount);
+
+
+      const transactionReceiverQry = `
+      INSERT INTO Transaction (Transaction_Type, Amount, Date_Time, Account_No)
+      VALUES ('Transfer - Credit', $1, NOW(), $2)
+    `;
+      await pool.query(transactionReceiverQry, [amount, reciverAccNo]);
+    }
+
+
+    await pool.query('COMMIT');
+    res.json({ message: 'Transfer successful' });
+
+  } catch (error) {
+    await pool.query('ROLLBACK');
+    console.error('Error during transfer:', error.message);
+    res.status(500).json({ message: 'Internal server error during transfer' });
+  }
+});
+
 const port = process.env.PORT || 5000;
 app.listen(port, () => {
   console.log(`Server started on port ${port}`);
