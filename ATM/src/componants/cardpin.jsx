@@ -17,7 +17,7 @@ function CardPin() {
   const handleNextStep = async () => {
     if (currentStep === 0 && cardNumber.length === 12) {
       try {
-        const response = await axios.post('http://localhost:5000/api/login', { cardNumber });
+        const response = await axios.post('/api/login', { cardNumber });
         if (response.status === 200 && response.data.message === 'Card found, please enter your PIN') {
           setCurrentStep(1);
           setError("");
@@ -31,7 +31,7 @@ function CardPin() {
       }
     } else if (currentStep === 1 && pin.length === 4) {
       try {
-        const response = await axios.post('http://localhost:5000/api/login', { cardNumber, pin });
+        const response = await axios.post('/api/login', { cardNumber, pin });
         if (response.status === 200) {
           localStorage.setItem('token', response.data.token);
           navigate('/dashboard');

@@ -11,7 +11,7 @@ const CheckBalance = () => {
     const fetchReceiptData = async () => {
       try {
         const token = localStorage.getItem('token');
-        const response = await axios.get('http://localhost:5000/api/balance-receipt', {
+        const response = await axios.get('/api/balance-receipt', {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -43,4 +43,3 @@ const CheckBalance = () => {
 };
 
 export default CheckBalance;
- 

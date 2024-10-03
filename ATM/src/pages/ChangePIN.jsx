@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom'; 
+import { useNavigate } from 'react-router-dom';
 import '../css/cardpin.css';
 import Pininp from '../componants/pinInp';
 
@@ -13,7 +13,7 @@ function ChangePIN() {
   });
   const [error, setError] = useState('');
 
-  const navigate = useNavigate(); 
+  const navigate = useNavigate();
 
   const titles = ["Enter Old PIN", "Enter New PIN", "Re-enter New PIN"];
 
@@ -25,7 +25,7 @@ function ChangePIN() {
       if (step === 0) {
         if (oldPin.length === 4) {
           const response = await axios.post(
-            'http://localhost:5000/api/change-pin',
+            '/api/change-pin',
             { oldPin },
             { headers: { Authorization: `Bearer ${token}` } }
           );
@@ -50,14 +50,14 @@ function ChangePIN() {
         if (confirmPin.length === 4) {
           if (newPin === confirmPin) {
             const response = await axios.post(
-              'http://localhost:5000/api/change-pin',
+              '/api/change-pin',
               { oldPin, newPin },
               { headers: { Authorization: `Bearer ${token}` } }
             );
 
             if (response.data.message === 'PIN updated successfully!') {
               alert('PIN changed successfully!');
-              navigate('/dashboard'); 
+              navigate('/dashboard');
             } else {
               setError(response.data.message || 'Error changing PIN');
             }

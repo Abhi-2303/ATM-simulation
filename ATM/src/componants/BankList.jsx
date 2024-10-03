@@ -8,7 +8,7 @@ const BankList = ({ selectedBank, setTransferData }) => {
     useEffect(() => {
         const fetchBanks = async () => {
             try {
-                const response = await axios.get('http://localhost:5000/api/banks');
+                const response = await axios.get('/api/banks');
                 setBanks(response.data);
             } catch (error) {
                 console.error('Error fetching banks:', error.message);

@@ -20,7 +20,7 @@ const Transfer = () => {
     if (validateStep(step)) {
       if (step === 2) {
         try {
-          const response = await axios.post('http://localhost:5000/api/transfer', {
+          const response = await axios.post('/api/transfer', {
             bank: transferData.bank,
             name: transferData.beneficiaryName,
             reciverAccNo: transferData.accountNumber
@@ -45,9 +45,9 @@ const Transfer = () => {
           }
           console.error(error);
         }
-      } else if (step === 3){
+      } else if (step === 3) {
         try {
-          const response = await axios.post('http://localhost:5000/api/transfer', {
+          const response = await axios.post('/api/transfer', {
             bank: transferData.bank,
             name: transferData.beneficiaryName,
             reciverAccNo: transferData.accountNumber,
@@ -75,10 +75,10 @@ const Transfer = () => {
         }
 
       }
-      
+
       else if (step === 4) {
         try {
-          const res = await axios.post('http://localhost:5000/api/transfer', {
+          const res = await axios.post('/api/transfer', {
             reciverAccNo: transferData.accountNumber,
             name: transferData.beneficiaryName,
             bank: transferData.bank,

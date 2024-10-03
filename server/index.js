@@ -320,6 +320,6 @@ app.post('/api/transfer', verifyToken, async (req, res) => {
 });
 
 const port = process.env.PORT || 5000;
-app.listen(port, () => {
+app.listen(port, '0.0.0.0', () => {
   console.log(`Server started on port ${port}`);
 });
