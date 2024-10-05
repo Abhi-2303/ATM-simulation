@@ -16,14 +16,16 @@ const Transfer = () => {
   });
   const [errorMessage, setErrorMessage] = useState('');
 
+
   const nextStep = async () => {
     if (validateStep(step)) {
-      if (step === 2) {
+      if (step === 2 || step === 3 || step === 4) {
         try {
           const response = await axios.post('/api/transfer', {
             bank: transferData.bank,
             name: transferData.beneficiaryName,
-            reciverAccNo: transferData.accountNumber
+            reciverAccNo: transferData.accountNumber,
+            ...(step === 3 && { amount: transferData.amount })
           }, {
             headers: {
               'Content-Type': 'application/json',
@@ -32,7 +34,9 @@ const Transfer = () => {
           });
 
           if (response.data.message === 'The selected bank does not correspond to the beneficiary’s bank.') {
-            setErrorMessage('The selected bank does not correspond to the beneficiary’s bank.');
+            setErrorMessage(response.data.message);
+          } else if (step === 3 && response.data.message === 'Invalid amount') {
+            setErrorMessage(response.data.message);
           } else {
             setStep(prevStep => prevStep + 1);
           }
@@ -41,61 +45,7 @@ const Transfer = () => {
           if (error.response && error.response.data) {
             setErrorMessage(error.response.data.message);
           } else {
-            setErrorMessage('Error validating beneficiary.');
-          }
-          console.error(error);
-        }
-      } else if (step === 3) {
-        try {
-          const response = await axios.post('/api/transfer', {
-            bank: transferData.bank,
-            name: transferData.beneficiaryName,
-            reciverAccNo: transferData.accountNumber,
-            amount: transferData.amount
-          }, {
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${localStorage.getItem('token')}`
-            }
-          });
-
-          if (response.data.message === 'Invalid amount') {
-            setErrorMessage('Invalid amount');
-          } else {
-            setStep(prevStep => prevStep + 1);
-          }
-
-        } catch (error) {
-          if (error.response && error.response.data) {
-            setErrorMessage(error.response.data.message);
-          } else {
-            setErrorMessage('Error ');
-          }
-          console.error(error);
-        }
-
-      }
-
-      else if (step === 4) {
-        try {
-          const res = await axios.post('/api/transfer', {
-            reciverAccNo: transferData.accountNumber,
-            name: transferData.beneficiaryName,
-            bank: transferData.bank,
-            amount: transferData.amount
-          }, {
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${localStorage.getItem('token')}`
-            }
-          });
-
-          setStep(prevStep => prevStep + 1);
-        } catch (error) {
-          if (error.response && error.response.data) {
-            setErrorMessage(error.response.data.message);
-          } else {
-            setErrorMessage('Error occurred while transferring funds.');
+            setErrorMessage('Error during the transfer process.');
           }
           console.error(error);
         }
@@ -104,6 +54,7 @@ const Transfer = () => {
       }
     }
   };
+
 
 
   const prevStep = () => setStep(prevStep => prevStep - 1);

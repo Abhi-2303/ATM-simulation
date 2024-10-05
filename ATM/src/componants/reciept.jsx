@@ -9,6 +9,7 @@ const Receipt = ({ data }) => {
         branch,
         ITEMS = [],
         trans = [],
+        amount,
         availBAL,
         CONT,
         website,
@@ -63,6 +64,7 @@ const Receipt = ({ data }) => {
                         </table>
                     )}
 
+                    {amount && (<p>Amount: ₹{amount}</p>)}
                     <p>Available Balance: ₹{availBAL}</p>
                 </div>
             </div>

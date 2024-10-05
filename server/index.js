@@ -135,7 +135,7 @@ WHERE
     }
 
     const accountData = accountResult.rows[0];
-    // Send response with account data and transactions
+    
     res.json({
       bankName: accountData.bank_name,
       currentDate: accountData.current_datetime,
@@ -150,7 +150,7 @@ WHERE
           tag: 'Customer Name',
           value: accountData.customer_name
         },
-        // Add other items if needed
+
       ],
       availBAL: accountData.balance,
       CONT: accountData.contact_info,
@@ -199,7 +199,7 @@ app.post('/api/change-pin', verifyToken, async (req, res) => {
 
 app.get('/api/banks', async (req, res) => {
   try {
-    // Query to fetch bank list
+
     const bankQuery = 'SELECT bank_name FROM Bank';
     const { rows } = await pool.query(bankQuery);
 
@@ -207,7 +207,7 @@ app.get('/api/banks', async (req, res) => {
       return res.status(404).json({ message: 'No banks found' });
     }
 
-    res.json(rows.map(row => row.bank_name)); // Return array of bank names
+    res.json(rows.map(row => row.bank_name));
   } catch (error) {
     console.error('Error fetching bank list:', error.message);
     res.status(500).json({ message: 'Error fetching bank list' });
@@ -223,7 +223,7 @@ app.post('/api/transfer', verifyToken, async (req, res) => {
 
     await pool.query('BEGIN');
 
-    // Fetch sender's account number and balance
+
     const senderAccQuery = `
       SELECT a.Account_No, a.Balance 
       FROM Account a
