@@ -223,7 +223,6 @@ app.post('/api/transfer', verifyToken, async (req, res) => {
 
     await pool.query('BEGIN');
 
-
     const senderAccQuery = `
       SELECT a.Account_No, a.Balance 
       FROM Account a
@@ -318,6 +317,95 @@ app.post('/api/transfer', verifyToken, async (req, res) => {
     res.status(500).json({ message: 'Internal server error during transfer' });
   }
 });
+
+
+app.get('/api/account-type', verifyToken, async (req, res) => {
+  const cardNumber = req.cardNumber;
+
+  try {
+    const accountQuery = `
+            SELECT a.Account_Type
+            FROM Account a
+            JOIN Card crd ON a.Account_No = crd.Account_No
+            WHERE crd.Card_No = $1
+        `;
+    const { rows } = await pool.query(accountQuery, [cardNumber]);
+
+    if (rows.length === 0) {
+      return res.status(404).json({ message: 'Account not found' });
+    }
+
+    const accountType = rows[0].account_type;
+    res.json({ accountType });
+  } catch (error) {
+    console.error('Error fetching account type:', error.message);
+    return res.status(500).json({ message: 'Error fetching account type' });
+  }
+});
+
+
+app.post('/api/withdraw', verifyToken, async (req, res) => {
+  const { amount, type } = req.body;
+  const cardNumber = req.cardNumber;
+
+  try {
+    await pool.query('BEGIN');
+
+    const accountQuery = `
+      SELECT a.Account_No, a.Balance, a.Account_Type
+      FROM Account a
+      JOIN Card crd ON a.Account_No = crd.Account_No
+      WHERE crd.Card_No = $1 
+    `;
+    const { rows: accountRows } = await pool.query(accountQuery, [cardNumber]);
+
+    if (accountRows.length === 0) {
+      await pool.query('ROLLBACK');
+      return res.status(404).json({ message: 'Account not found' });
+    }
+
+    const accountNo = accountRows[0].account_no;
+    const currentBalance = accountRows[0].balance;
+    const accountType = accountRows[0].account_type;
+
+    if (currentBalance < amount) {
+      await pool.query('ROLLBACK');
+      return res.status(400).json({ message: 'Insufficient balance' });
+    }
+
+    const updateBalanceQuery = `
+      UPDATE Account
+      SET Balance = Balance - $1
+      WHERE Account_No = $2
+    `;
+    await pool.query(updateBalanceQuery, [amount, accountNo]);
+
+    const transactionQuery = `
+      INSERT INTO Transaction (Transaction_Type, Amount, Date_Time, Account_No)
+      VALUES ('Withdrawal', $1, NOW(), $2)
+    `;
+    await pool.query(transactionQuery, [amount, accountNo]);
+
+    await pool.query('COMMIT');
+
+    res.json({
+      message: 'Withdrawal successful',
+      newBalance: currentBalance - amount,
+      accountType: accountType  // Return the account type in the response
+    });
+
+  } catch (error) {
+    await pool.query('ROLLBACK');
+    console.error('Error during withdrawal:', error.message);
+    res.status(500).json({ message: 'Internal server error during withdrawal' });
+  }
+});
+
+
+
+
+
+
 
 const port = process.env.PORT || 5000;
 app.listen(port, '0.0.0.0', () => {
