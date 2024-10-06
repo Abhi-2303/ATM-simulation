@@ -343,7 +343,6 @@ app.get('/api/account-type', verifyToken, async (req, res) => {
   }
 });
 
-
 app.post('/api/withdraw', verifyToken, async (req, res) => {
   const { amount, type } = req.body;
   const cardNumber = req.cardNumber;
@@ -402,6 +401,70 @@ app.post('/api/withdraw', verifyToken, async (req, res) => {
 });
 
 
+app.get('/api/mini-statement', verifyToken, async (req, res) => {
+  try {
+    const cardNumber = req.cardNumber;
+
+    const query = `
+            SELECT
+                TO_CHAR(t.Date_Time, 'MM/DD/YYYY, HH:MI:SS AM') as Date_Time,
+                t.Transaction_ID AS tid,
+                t.Amount AS amount,
+                t.Transaction_Type AS tstatus,
+                a.Account_No AS accountNumber,
+                c.Name AS customerName,
+                b.Bank_Name AS bankName,
+                b.Contact_Info AS contactInfo,
+                b.Website AS website,
+                b.Address AS branch,
+                a.Balance AS availableBalance
+            FROM 
+                Transaction t
+            JOIN
+                Account a ON t.Account_No = a.Account_No
+            JOIN
+                Card crd ON a.Account_No = crd.Account_No
+            JOIN
+                Customer c ON a.Customer_ID = c.Customer_ID
+            JOIN
+                Bank b ON a.Bank_ID = b.Bank_ID
+            WHERE 
+                crd.Card_No = $1
+            ORDER BY t.Date_Time DESC
+            LIMIT 5;
+        `;
+
+    const { rows } = await pool.query(query, [cardNumber]);
+
+    if (rows.length === 0) {
+      return res.status(404).json({ message: 'No transactions found' });
+    }
+
+    const transactions = rows.map(row => ({
+      date: row.date_time,
+      tid: row.tid,
+      amount: row.amount,
+      tstatus: row.tstatus
+    }));
+
+    const accountInfo = rows[0]; 
+    res.json({
+      bankName: accountInfo.bankname,
+      currentDate: new Date().toLocaleString(),
+      atmId: 'ATM0001234',
+      branch: accountInfo.branch,
+      accountNumber: accountInfo.accountnumber,
+      customerName: accountInfo.customername,
+      availableBalance: accountInfo.availablebalance,
+      contactInfo: accountInfo.contactinfo,
+      website: accountInfo.website,
+      transactions: transactions
+    });
+  } catch (error) {
+    console.error('Error fetching mini-statement:', error.message);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
 
 
 

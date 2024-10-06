@@ -1,7 +1,56 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import Receipt from '../componants/reciept';
 
 const MiniStatements = () => {
-    return <div>Mini Statements Page</div>;
+    const [miniStatementData, setMiniStatementData] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState('');
+
+    useEffect(() => {
+        const fetchMiniStatement = async () => {
+            try {
+                const token = localStorage.getItem('token');
+                const response = await axios.get('/api/mini-statement', {
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    }
+                });
+
+                setMiniStatementData({
+                    bankName: response.data.bankName,
+                    currentDate: response.data.currentDate,
+                    atmId: response.data.atmId,
+                    branch: response.data.branch,
+                    ITEMS: [
+                        { tag: 'Account Number', value: response.data.accountNumber },
+                        { tag: 'Customer Name', value: response.data.customerName },
+                    ],
+                    trans: response.data.transactions,
+                    availBAL: response.data.availableBalance,
+                    CONT: response.data.contactInfo,
+                    website: response.data.website,
+                });
+
+                setLoading(false);
+            } catch (error) {
+                setLoading(false);
+                setError('Error fetching mini-statement.');
+            }
+        };
+
+        fetchMiniStatement();
+    }, []);
+
+    if (loading) {
+        return <div>Loading...</div>;
+    }
+
+    if (error) {
+        return <div>{error}</div>;
+    }
+
+    return <Receipt data={miniStatementData} />;
 };
 
 export default MiniStatements;

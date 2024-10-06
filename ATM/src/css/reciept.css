@@ -78,6 +78,7 @@
       background-color: #e1e1e180;
       color: #333;
   }
+  .info table td,.info table th {text-align: center;}
 
   .message {
       text-align: center;
