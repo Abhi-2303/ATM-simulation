@@ -467,6 +467,54 @@ app.get('/api/mini-statement', verifyToken, async (req, res) => {
 });
 
 
+app.post('/api/deposit', verifyToken, async (req, res) => {
+  const { amount } = req.body;
+  const cardNumber = req.cardNumber;
+
+  try {
+    await pool.query('BEGIN');
+
+    const accountQuery = `
+      SELECT a.Account_No, a.Balance
+      FROM Account a
+      JOIN Card crd ON a.Account_No = crd.Account_No
+      WHERE crd.Card_No = $1
+    `;
+    const { rows: accountRows } = await pool.query(accountQuery, [cardNumber]);
+
+    if (accountRows.length === 0) {
+      await pool.query('ROLLBACK');
+      return res.status(404).json({ message: 'Account not found' });
+    }
+
+    const accountNo = accountRows[0].account_no;
+
+    const updateBalanceQuery = `
+      UPDATE Account
+      SET Balance = Balance + $1
+      WHERE Account_No = $2
+    `;
+    await pool.query(updateBalanceQuery, [amount, accountNo]);
+
+    const transactionQuery = `
+      INSERT INTO Transaction (Transaction_Type, Amount, Date_Time, Account_No)
+      VALUES ('Deposit', $1, NOW(), $2)
+    `;
+    await pool.query(transactionQuery, [amount, accountNo]);
+
+    await pool.query('COMMIT');
+
+    res.json({
+      message: 'Deposit successful',
+      newBalance: accountRows[0].balance + amount,
+    });
+
+  } catch (error) {
+    await pool.query('ROLLBACK');
+    console.error('Error during deposit:', error.message);
+    res.status(500).json({ message: 'Internal server error during deposit' });
+  }
+});
 
 
 
