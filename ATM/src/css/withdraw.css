@@ -52,3 +52,14 @@
     font-size: 18px;
     color: #333;
 }
+
+#animation {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+#animation img {
+    filter: drop-shadow(3px 3px 5px rgba(0, 0, 0, 0.3));
+}

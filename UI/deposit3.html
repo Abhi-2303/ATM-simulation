@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Confirm Deposit</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: linear-gradient(120deg, #8b7ff4, #48daf4);
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 400px;
+            background: #ffffff;
+            border-radius: 20px;
+            box-shadow: 0 15px 30px #0000001a;
+            padding: 40px;
+            text-align: left;
+            border: 1px solid #ffffff33;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .container:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px #00000026;
+        }
+
+        h2 {
+            text-align: center;
+            font-size: 28px;
+            color: #3f3e3e;
+            margin-bottom: 25px;
+            font-weight: 700;
+            position: relative;
+            letter-spacing: 1px;
+        }
+
+        h2:after {
+            content: "";
+            display: block;
+            width: 100px;
+            height: 4px;
+            background-color: #1578b5;
+            margin: 12px auto 0;
+            border-radius: 2px;
+        }
+
+        .button-container {
+            display: flex;
+            justify-content: flex-end;
+            gap: 15px;
+        }
+
+        button {
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.3s, box-shadow 0.3s;
+            width: 48%;
+            font-size: 16px;
+            font-weight: bold;
+            color: #fff;
+        }
+
+        .continue {
+            background: linear-gradient(45deg, #007bff, #0056b3);
+        }
+
+        .continue:hover {
+            background: linear-gradient(45deg, #0056b3, #003f87);
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(0, 91, 187, 0.4);
+        }
+
+        .back {
+            background: linear-gradient(45deg, #6c757d, #5a6268);
+        }
+
+        .back:hover {
+            background: linear-gradient(45deg, #5a6268, #454d52);
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(90, 98, 104, 0.4);
+        }
+
+        .cmessage {
+            margin: 20px 0;
+            text-align: center;
+            font-size: 18px;
+            color: #333;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h2>Confirm Deposit</h2>
+
+        <div class="cmessage">
+            Confirm Deposit: <strong>₹XX.XX</strong>
+        </div>
+
+        <div class="button-container">
+            <button type="button" class="back">Cancel</button>
+            <button type="submit" class="continue">Confirm</button>
+        </div>
+    </div>
+</body>
+
+</html>
