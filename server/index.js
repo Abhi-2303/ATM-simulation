@@ -4,6 +4,7 @@ const cors = require('cors');
 const pool = require('./db');
 const { comparePassword, hashPassword } = require('./hashed_pass');
 const jwt = require('jsonwebtoken');
+const rateLimit = require('express-rate-limit');
 
 const app = express();
 const JWT_KEY = process.env.JWT_KEY;
@@ -11,7 +12,19 @@ const JWT_KEY = process.env.JWT_KEY;
 app.use(cors());
 app.use(express.json());
 
-app.post('/api/login', async (req, res) => {
+const Duration = 2 * 60 * 1000; // minutes
+const loginLimiter = rateLimit({
+  windowMs: Duration, 
+  max: 3, //Requests per windowMs
+  message: { message: 'Too many login attempts, please try again later.' },
+  handler: (req, res) => {
+    res.set('Retry-After', Duration / 1000);
+    res.status(429).json({ message: 'Too many login attempts, please try again later.' });
+  }
+});
+
+
+app.post('/api/login', loginLimiter, async (req, res) => {
   const { cardNumber, pin } = req.body;
 
   try {
@@ -20,6 +33,13 @@ app.post('/api/login', async (req, res) => {
 
     if (rows.length === 0) {
       return res.status(404).json({ message: 'Card not found' });
+    }
+
+    const expirationDate = new Date(rows[0].expiry_date);
+    const currentDate = new Date();
+
+    if (currentDate > expirationDate) {
+      return res.json({ message: 'Card is expired' });
     }
 
     if (!pin) {
@@ -31,8 +51,7 @@ app.post('/api/login', async (req, res) => {
       return res.status(400).json({ message: 'Invalid PIN' });
     }
 
-
-    const token = jwt.sign({ cardNumber: rows[0].card_no }, JWT_KEY, { expiresIn: '10m' });
+    const token = jwt.sign({ cardNumber: rows[0].card_no }, JWT_KEY, { expiresIn: '5s' });
     res.json({ message: 'Login successful!', token });
 
   } catch (error) {
@@ -40,6 +59,7 @@ app.post('/api/login', async (req, res) => {
     res.status(500).json({ message: 'Error connecting to PostgreSQL' });
   }
 });
+
 
 const verifyToken = (req, res, next) => {
   const authHeader = req.headers.authorization;

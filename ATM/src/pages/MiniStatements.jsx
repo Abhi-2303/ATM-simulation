@@ -1,16 +1,29 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import Receipt from '../componants/reciept';
+import { useNavigate } from 'react-router-dom'; 
 
 const MiniStatements = () => {
     const [miniStatementData, setMiniStatementData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+    const navigate = useNavigate();
+
+    const handleTokenExpiry = () => {
+        localStorage.removeItem('token');
+        navigate('/');
+    };
 
     useEffect(() => {
         const fetchMiniStatement = async () => {
+            const token = localStorage.getItem('token');
+
+            if (!token) {
+                handleTokenExpiry();
+                return;
+            }
+
             try {
-                const token = localStorage.getItem('token');
                 const response = await axios.get('/api/mini-statement', {
                     headers: {
                         Authorization: `Bearer ${token}`
@@ -34,13 +47,17 @@ const MiniStatements = () => {
 
                 setLoading(false);
             } catch (error) {
-                setLoading(false);
-                setError('Error fetching mini-statement.');
+                if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+                    handleTokenExpiry();
+                } else {
+                    setError('Error fetching mini-statement.');
+                    setLoading(false);
+                }
             }
         };
 
         fetchMiniStatement();
-    }, []);
+    }, [navigate]); 
 
     if (loading) {
         return <div>Loading...</div>;

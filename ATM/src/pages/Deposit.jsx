@@ -4,11 +4,13 @@ import DepositImg from '../componants/depositImg';
 import DepositConfirm from '../componants/depositConfirm';
 import '../css/withdraw.css';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
 const Deposit = () => {
   const [step, setStep] = useState(1);
   const [amount, setAmount] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
+  const navigate = useNavigate();
 
   const nextStep = () => setStep((prevStep) => prevStep + 1);
   const prevStep = () => setStep((prevStep) => prevStep - 2);
@@ -39,20 +41,37 @@ const Deposit = () => {
     const value = e.target.value;
     if (value >= 0) {
       setAmount(value);
-      setErrorMessage(''); 
+      setErrorMessage('');
     }
   };
 
+  const handleTokenExpiry = () => {
+    localStorage.removeItem('token');
+    navigate('/'); 
+  };
+
   const handleDeposit = async () => {
+    const token = localStorage.getItem('token');
+
+    if (!token) {
+      handleTokenExpiry();
+      return;
+    }
+
     try {
       const response = await axios.post(
-        '/api/deposit',{ amount },
-        { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+        '/api/deposit',
+        { amount },
+        { headers: { Authorization: `Bearer ${token}` } }
       );
       nextStep();
-      setErrorMessage(response.data.message)
+      setErrorMessage(response.data.message);
     } catch (error) {
-      setErrorMessage(error.response?.data?.message || 'Deposit error: An unknown error occurred');
+      if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+        handleTokenExpiry();
+      } else {
+        setErrorMessage(error.response?.data?.message || 'Deposit error: An unknown error occurred');
+      }
     }
   };
 

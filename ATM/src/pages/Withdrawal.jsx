@@ -3,12 +3,19 @@ import WithdrawAmount from '../componants/withdrawAmount';
 import WithdrawConfirm from '../componants/withdrawConfirm';
 import '../css/Withdraw.css';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';  
 
 const Withdrawal = () => {
     const [step, setStep] = useState(1);
     const [selectedAmount, setSelectedAmount] = useState(null);
     const [accountType, setAccountType] = useState('');
     const [errorMessage, setErrorMessage] = useState('');
+    const navigate = useNavigate(); 
+
+    const handleTokenExpiry = () => {
+        localStorage.removeItem('token');
+        navigate('/');  
+    };
 
     const nextStep = () => setStep((prevStep) => prevStep + 1);
     const prevStep = () => setStep((prevStep) => prevStep - 1);
@@ -17,7 +24,6 @@ const Withdrawal = () => {
         setSelectedAmount(amount);
 
         try {
-            // Fetch account type after selecting amount
             const response = await axios.get(
                 'http://localhost:5000/api/account-type',
                 { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
@@ -26,12 +32,14 @@ const Withdrawal = () => {
             if (response.data.accountType) {
                 setAccountType(response.data.accountType);
                 setErrorMessage('');
-                nextStep(); 
+                nextStep();
             } else {
                 setErrorMessage('Failed to retrieve account type.');
             }
         } catch (error) {
-            if (error.response) {
+            if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+                handleTokenExpiry();  
+            } else if (error.response) {
                 setErrorMessage(error.response.data.message);
             } else {
                 setErrorMessage('Something went wrong. Please try again.');
@@ -53,7 +61,9 @@ const Withdrawal = () => {
 
             setErrorMessage('');
         } catch (error) {
-            if (error.response) {
+            if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+                handleTokenExpiry(); 
+            } else if (error.response) {
                 setErrorMessage(error.response.data.message);
             } else {
                 setErrorMessage('Something went wrong. Please try again.');

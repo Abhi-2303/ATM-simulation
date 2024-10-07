@@ -17,9 +17,19 @@ function ChangePIN() {
 
   const titles = ["Enter Old PIN", "Enter New PIN", "Re-enter New PIN"];
 
+  const handleTokenExpiry = () => {
+    localStorage.removeItem('token');
+    navigate('/');
+  };
+
   const handleContinue = async () => {
     const { oldPin, newPin, confirmPin } = pins;
     const token = localStorage.getItem('token');
+
+    if (!token) {
+      handleTokenExpiry();
+      return;
+    }
 
     try {
       if (step === 0) {
@@ -69,7 +79,11 @@ function ChangePIN() {
         }
       }
     } catch (error) {
-      setError(error.response?.data.message || 'Error processing your request');
+      if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+        handleTokenExpiry();
+      } else {
+        setError(error.response?.data.message || 'Error processing your request');
+      }
     }
   };
 

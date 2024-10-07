@@ -5,6 +5,7 @@ import BankList from '../componants/BankList';
 import PaymentForm from '../componants/PaymentForm';
 import Amount from '../componants/Amount';
 import ConfirmTransfer from '../componants/ConfirmTransfer';
+import { useNavigate } from 'react-router-dom';  
 
 const Transfer = () => {
   const [step, setStep] = useState(1);
@@ -16,6 +17,11 @@ const Transfer = () => {
   });
   const [errorMessage, setErrorMessage] = useState('');
 
+  const navigate = useNavigate(); 
+  const handleTokenExpiry = () => {
+    localStorage.removeItem('token');
+    navigate('/');
+  };
 
   const nextStep = async () => {
     if (validateStep(step)) {
@@ -42,7 +48,9 @@ const Transfer = () => {
           }
 
         } catch (error) {
-          if (error.response && error.response.data) {
+          if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+            handleTokenExpiry(); 
+          } else if (error.response && error.response.data) {
             setErrorMessage(error.response.data.message);
           } else {
             setErrorMessage('Error during the transfer process.');
@@ -54,10 +62,6 @@ const Transfer = () => {
       }
     }
   };
-
-  // Move to the previous step
-  const prevStep = () => setStep((prevStep) => prevStep - 1);
-
 
   const prevStep = () => setStep(prevStep => prevStep - 1);
 
@@ -80,7 +84,6 @@ const Transfer = () => {
     setErrorMessage('');
     return true;
   };
-
 
   const getTitle = () => {
     switch (step) {
