@@ -55,6 +55,8 @@ const Transfer = () => {
     }
   };
 
+  // Move to the previous step
+  const prevStep = () => setStep((prevStep) => prevStep - 1);
 
 
   const prevStep = () => setStep(prevStep => prevStep - 1);
