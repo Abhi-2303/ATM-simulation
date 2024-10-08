@@ -19,6 +19,7 @@ const MiniStatements = () => {
             const token = localStorage.getItem('token');
 
             if (!token) {
+                alert('Token has expired. Please log in again.');
                 handleTokenExpiry();
                 return;
             }
@@ -48,6 +49,7 @@ const MiniStatements = () => {
                 setLoading(false);
             } catch (error) {
                 if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+                    alert('Token has expired. Please log in again.');
                     handleTokenExpiry();
                 } else {
                     setError('Error fetching mini-statement.');

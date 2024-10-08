@@ -37,7 +37,7 @@ export default function Pininp({ value, setValue }) {
     }, [value]);
 
     return (
-        <>
+        <form className='pin'>
             {Array.from({ length: 4 }).map((_, index) => (
                 <input
                     key={index}
@@ -50,8 +50,9 @@ export default function Pininp({ value, setValue }) {
                     onKeyDown={(e) => handleKeyDown(e, index)}
                     inputMode="numeric"
                     pattern="\d*"
+                    style={{ width: '3rem' }}
                 />
             ))}
-        </>
+        </form>
     );
 }

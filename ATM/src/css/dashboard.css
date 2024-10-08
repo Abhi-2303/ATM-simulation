@@ -7,8 +7,17 @@
     border-radius: 8px;
     text-align: start;
     padding: 10px;
-    margin: 10px 0;
+    margin: 40px 0 10px 0;
     background-color: #f9f9f9;
+    position: relative;
+}
+
+.prev-tran::before {
+    content: "Last Transaction:";
+    font-weight: bold;
+    color: #02176a7d;
+    position: absolute;
+    top: -20px;
 }
 
 .prev-tran strong {

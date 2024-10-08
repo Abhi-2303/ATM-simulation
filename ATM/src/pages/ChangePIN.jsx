@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import '../css/cardpin.css';
+import '../css/pin.css';
 import Pininp from '../componants/pinInp';
 
 function ChangePIN() {
@@ -27,6 +27,7 @@ function ChangePIN() {
     const token = localStorage.getItem('token');
 
     if (!token) {
+      alert('Token has expired. Please log in again.');
       handleTokenExpiry();
       return;
     }
@@ -72,7 +73,7 @@ function ChangePIN() {
               setError(response.data.message || 'Error changing PIN');
             }
           } else {
-            setError('Pins do not match. Please try again.');
+            setError('PIN do not match. Please try again.');
           }
         } else {
           setError('Please re-enter the 4-digit new PIN.');
@@ -80,6 +81,7 @@ function ChangePIN() {
       }
     } catch (error) {
       if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+        alert('Token has expired. Please log in again.');
         handleTokenExpiry();
       } else {
         setError(error.response?.data.message || 'Error processing your request');

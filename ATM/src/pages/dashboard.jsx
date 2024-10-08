@@ -32,10 +32,12 @@ const Dashboard = () => {
                     if (response.status === 200) {
                         setUserData(response.data);
                     } else {
+                        alert('Token has expired. Please log in again.');
                         handleTokenExpiry();
                     }
                 } catch (error) {
                     if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+                        alert('Token has expired. Please log in again.');
                         handleTokenExpiry();
                     } else {
                         console.error('Error fetching data:', error);

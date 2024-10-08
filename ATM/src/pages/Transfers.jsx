@@ -1,23 +1,26 @@
-import React, { useState } from 'react';
 import axios from 'axios';
 import '../css/transfer.css';
-import BankList from '../componants/BankList';
-import PaymentForm from '../componants/PaymentForm';
+import React, { useState } from 'react';
 import Amount from '../componants/Amount';
+import Pininp from '../componants/pinInp';
+import BankList from '../componants/BankList';
+import { useNavigate } from 'react-router-dom';
+import PaymentForm from '../componants/PaymentForm';
 import ConfirmTransfer from '../componants/ConfirmTransfer';
-import { useNavigate } from 'react-router-dom';  
+
 
 const Transfer = () => {
+  const navigate = useNavigate();
+  const [pin, setPin] = useState('');
   const [step, setStep] = useState(1);
+  const [errorMessage, setErrorMessage] = useState('');
   const [transferData, setTransferData] = useState({
     bank: '',
     beneficiaryName: '',
     reciverAccNo: '',
     amount: ''
   });
-  const [errorMessage, setErrorMessage] = useState('');
 
-  const navigate = useNavigate(); 
   const handleTokenExpiry = () => {
     localStorage.removeItem('token');
     navigate('/');
@@ -25,13 +28,13 @@ const Transfer = () => {
 
   const nextStep = async () => {
     if (validateStep(step)) {
-      if (step === 2 || step === 3 || step === 4) {
+      if (step === 2 || step === 5) {
         try {
           const response = await axios.post('/api/transfer', {
             bank: transferData.bank,
             name: transferData.beneficiaryName,
             reciverAccNo: transferData.accountNumber,
-            ...(step === 3 && { amount: transferData.amount })
+            ...(step === 5 && { amount: transferData.amount, pin: pin})
           }, {
             headers: {
               'Content-Type': 'application/json',
@@ -41,15 +44,24 @@ const Transfer = () => {
 
           if (response.data.message === 'The selected bank does not correspond to the beneficiary’s bank.') {
             setErrorMessage(response.data.message);
-          } else if (step === 3 && response.data.message === 'Invalid amount') {
+          } else if (response.data.message === 'Invalid amount') {
             setErrorMessage(response.data.message);
-          } else {
+          } 
+          else if (response.data.message === 'Transfer successful') {
+            alert(response.data.message);
+            navigate('/dashboard');
+          }
+          else {
             setStep(prevStep => prevStep + 1);
           }
 
         } catch (error) {
           if (error.response && (error.response.status === 401 || error.response.status === 403)) {
-            handleTokenExpiry(); 
+            alert('Token has expired. Please log in again.');
+            handleTokenExpiry();
+          } else if (error.response.data.message === 'Insufficient balance') {
+            alert(error.response.data.message);
+            navigate('/dashboard');
           } else if (error.response && error.response.data) {
             setErrorMessage(error.response.data.message);
           } else {
@@ -95,6 +107,8 @@ const Transfer = () => {
         return 'Enter Transfer Amount';
       case 4:
         return 'Confirm Transfer Details';
+      case 5:
+        return 'Enter PIN';
       default:
         return 'Transfer Money';
     }
@@ -124,14 +138,15 @@ const Transfer = () => {
           />
         )}
         {step === 4 && <ConfirmTransfer transferData={transferData} />}
+        {step === 5 && (
+          <Pininp value={pin} setValue={setPin} />
+        )}
       </div>
       <div className="button-container">
         {step > 1 && <button className="back" onClick={prevStep}>Back</button>}
-        {step < 4 ? (
-          <button className="continue" onClick={nextStep}>Continue</button>
-        ) : (
-          <button className="continue" onClick={() => alert('Transfer confirmed!')}>Confirm</button>
-        )}
+        <button className="continue" onClick={nextStep}>
+          {step === 5 ? 'Submit' : step < 4 ? 'Continue' : 'Confirm'}
+        </button>
       </div>
       {errorMessage && <div className="error">{errorMessage}</div>}
     </div>

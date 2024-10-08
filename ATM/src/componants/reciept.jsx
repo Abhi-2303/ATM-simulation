@@ -1,7 +1,9 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import "../css/reciept.css"
 
 const Receipt = ({ data }) => {
+    const navigate = useNavigate();
     const {
         bankName,
         currentDate,
@@ -15,8 +17,19 @@ const Receipt = ({ data }) => {
         website,
     } = data || {};
 
+    const handlePrint = () => {
+        window.print();
+    };
+
+    const goToDashboard = () => {
+        navigate('/dashboard'); 
+    };
+
     return (
         <div className="recieptBox">
+            <div className="arrow" onClick={goToDashboard}>
+                <img src="icons/leftarrow.gif" alt="back" height={20} />
+            </div>
             <div className="header">
                 <h1>{bankName}</h1>
                 <sup>{currentDate}</sup>
@@ -71,6 +84,9 @@ const Receipt = ({ data }) => {
             <div className="message">
                 <p>For assistance, call: <a href={`tel:${CONT}`}>{CONT}</a> or visit our  <a href={`${website}`}>{website}</a>.</p>
                 <p>Never share your PIN with anyone.</p>
+            </div>
+            <div className="print" onClick={handlePrint}>
+                <img src="icons/printer.png" alt="print" height={50} />
             </div>
         </div>
     );

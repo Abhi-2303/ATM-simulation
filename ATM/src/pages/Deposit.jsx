@@ -54,6 +54,7 @@ const Deposit = () => {
     const token = localStorage.getItem('token');
 
     if (!token) {
+      alert('Token has expired. Please log in again.');
       handleTokenExpiry();
       return;
     }
@@ -66,8 +67,13 @@ const Deposit = () => {
       );
       nextStep();
       setErrorMessage(response.data.message);
+      if (response.data.message === "Deposit successful"){
+        alert('Deposit successful');
+        navigate('/dashboard');
+      }
     } catch (error) {
       if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+        alert('Token has expired. Please log in again.');
         handleTokenExpiry();
       } else {
         setErrorMessage(error.response?.data?.message || 'Deposit error: An unknown error occurred');

@@ -1,31 +1,39 @@
 import React, { useState } from 'react';
 import WithdrawAmount from '../componants/withdrawAmount';
 import WithdrawConfirm from '../componants/withdrawConfirm';
+import Pininp from '../componants/pinInp';
 import '../css/Withdraw.css';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';  
+import { useNavigate } from 'react-router-dom';
 
 const Withdrawal = () => {
+    const navigate = useNavigate();
+    const [pin, setPin] = useState('');
     const [step, setStep] = useState(1);
-    const [selectedAmount, setSelectedAmount] = useState(null);
     const [accountType, setAccountType] = useState('');
     const [errorMessage, setErrorMessage] = useState('');
-    const navigate = useNavigate(); 
+    const [selectedAmount, setSelectedAmount] = useState(null);
 
     const handleTokenExpiry = () => {
         localStorage.removeItem('token');
-        navigate('/');  
+        navigate('/');
     };
 
     const nextStep = () => setStep((prevStep) => prevStep + 1);
     const prevStep = () => setStep((prevStep) => prevStep - 1);
 
     const handleAmountSelection = async (amount) => {
+        if (!amount || isNaN(amount) || Number(amount) <= 0) {
+            setErrorMessage('Please enter a valid amount.');
+            return;
+        }
+
         setSelectedAmount(amount);
+        setErrorMessage('');
 
         try {
             const response = await axios.get(
-                'http://localhost:5000/api/account-type',
+                '/api/account-type',
                 { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
             );
 
@@ -34,11 +42,12 @@ const Withdrawal = () => {
                 setErrorMessage('');
                 nextStep();
             } else {
-                setErrorMessage('Failed to retrieve account type.');
+                setErrorMessage('Failed to retrieve account details.');
             }
         } catch (error) {
             if (error.response && (error.response.status === 401 || error.response.status === 403)) {
-                handleTokenExpiry();  
+                alert('Token has expired. Please log in again.');
+                handleTokenExpiry();
             } else if (error.response) {
                 setErrorMessage(error.response.data.message);
             } else {
@@ -50,19 +59,24 @@ const Withdrawal = () => {
     const handleWithdrawal = async () => {
         try {
             const response = await axios.post(
-                'http://localhost:5000/api/withdraw',
-                { amount: selectedAmount, type: accountType },
+                '/api/withdraw',
+                { amount: selectedAmount, type: accountType, pin: pin },
                 { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
             );
 
             if (response.data.message === 'Withdrawal successful') {
                 alert(response.data.message);
+                navigate('/dashboard');
             }
 
             setErrorMessage('');
         } catch (error) {
             if (error.response && (error.response.status === 401 || error.response.status === 403)) {
-                handleTokenExpiry(); 
+                alert('Token has expired. Please log in again.');
+                handleTokenExpiry();
+            } else if (error.response.data.message === "Insufficient balance") {
+                alert(error.response.data.message);
+                navigate('/dashboard');
             } else if (error.response) {
                 setErrorMessage(error.response.data.message);
             } else {
@@ -77,6 +91,8 @@ const Withdrawal = () => {
                 return 'Select Withdrawal Amount';
             case 2:
                 return 'Confirm Withdrawal';
+            case 3:
+                return 'Enter PIN';
             default:
                 return 'Withdrawal';
         }
@@ -91,6 +107,9 @@ const Withdrawal = () => {
             {step === 2 && (
                 <WithdrawConfirm amount={selectedAmount} accountType={accountType} />
             )}
+            {step === 3 && (
+                <Pininp value={pin} setValue={setPin} />
+            )}
             <div className="button-container">
                 {step > 1 && <button className="back" onClick={prevStep}>Back</button>}
                 {step === 1 && (
@@ -102,8 +121,13 @@ const Withdrawal = () => {
                     </button>
                 )}
                 {step === 2 && (
-                    <button className="continue" onClick={handleWithdrawal}>
+                    <button className="continue" onClick={nextStep}>
                         Confirm
+                    </button>
+                )}
+                {step === 3 && (
+                    <button className="continue" onClick={handleWithdrawal}>
+                        Submit PIN
                     </button>
                 )}
             </div>

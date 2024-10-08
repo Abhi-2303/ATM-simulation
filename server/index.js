@@ -14,8 +14,8 @@ app.use(express.json());
 
 const Duration = 2 * 60 * 1000; // minutes
 const loginLimiter = rateLimit({
-  windowMs: Duration, 
-  max: 3, //Requests per windowMs
+  windowMs: Duration,
+  max: 13, //Requests per windowMs
   message: { message: 'Too many login attempts, please try again later.' },
   handler: (req, res) => {
     res.set('Retry-After', Duration / 1000);
@@ -51,7 +51,7 @@ app.post('/api/login', loginLimiter, async (req, res) => {
       return res.status(400).json({ message: 'Invalid PIN' });
     }
 
-    const token = jwt.sign({ cardNumber: rows[0].card_no }, JWT_KEY, { expiresIn: '5s' });
+    const token = jwt.sign({ cardNumber: rows[0].card_no }, JWT_KEY, { expiresIn: '10s' });
     res.json({ message: 'Login successful!', token });
 
   } catch (error) {
@@ -155,7 +155,7 @@ WHERE
     }
 
     const accountData = accountResult.rows[0];
-    
+
     res.json({
       bankName: accountData.bank_name,
       currentDate: accountData.current_datetime,
@@ -236,15 +236,15 @@ app.get('/api/banks', async (req, res) => {
 
 app.post('/api/transfer', verifyToken, async (req, res) => {
   try {
-    const {bank, name } = req.body;
+    const { bank, name } = req.body;
     const reciverAccNo = Number(req.body.reciverAccNo);
     const amount = Number(req.body.amount);
+    const pin = req.body.pin;
     const cardNumber = req.cardNumber;
 
     await pool.query('BEGIN');
-
     const senderAccQuery = `
-      SELECT a.Account_No, a.Balance 
+      SELECT a.Account_No, a.Balance, crd.pin 
       FROM Account a
       JOIN Card crd ON a.Account_No = crd.Account_No
       WHERE crd.Card_No = $1
@@ -255,20 +255,24 @@ app.post('/api/transfer', verifyToken, async (req, res) => {
       await pool.query('ROLLBACK');
       return res.status(404).json({ message: 'Sender account not found' });
     }
-
+    
     const senderAccountNo = senderRows[0].account_no;
     const senderBalance = senderRows[0].balance;
-
+    
+    
     if (senderAccountNo === reciverAccNo) {
       await pool.query('ROLLBACK');
       return res.status(400).json({ message: 'You cannot transfer money to your own account' });
     }
-
-    if (senderBalance < amount) {
-      await pool.query('ROLLBACK');
-      return res.status(400).json({ message: 'Insufficient balance' });
+    
+    if (pin) {
+      const storedHash = senderRows[0].pin;
+      const isMatch = await comparePassword(pin, storedHash);
+      if (!isMatch) {
+        await pool.query('ROLLBACK');
+        return res.status(400).json({ message: 'Invalid PIN' });
+      }
     }
-
 
     const receiverAccQuery = `
       SELECT a.Account_No, c.Name, b.Bank_Name
@@ -292,40 +296,48 @@ app.post('/api/transfer', verifyToken, async (req, res) => {
     }
 
 
+
+    if (senderBalance < amount) {
+      await pool.query('ROLLBACK');
+      return res.status(400).json({ message: 'Insufficient balance' });
+    }
+
+    if (!amount) {
+      await pool.query('ROLLBACK');
+      return res.json({ getAmount: 'Amount is required' });
+    }
     if (isNaN(amount) || amount <= 0) {
       await pool.query('ROLLBACK');
       return res.json({ message: 'Invalid amount' });
     }
-    if (amount){
 
-      const deductSender = `
+    const deductSender = `
       UPDATE Account
       SET Balance = Balance - $1
       WHERE Account_No = $2
     `;
-      await pool.query(deductSender, [amount, senderAccountNo]);
+    await pool.query(deductSender, [amount, senderAccountNo]);
 
-      const addReceiver = `
+    const addReceiver = `
       UPDATE Account
       SET Balance = Balance + $1
       WHERE Account_No = $2
     `;
-      await pool.query(addReceiver, [amount, reciverAccNo]);
+    await pool.query(addReceiver, [amount, reciverAccNo]);
 
-      const transactionSenderQry = `
+    const transactionSenderQry = `
       INSERT INTO Transaction (Transaction_Type, Amount, Date_Time, Account_No)
-      VALUES ('Transfer - Debit', $1, NOW(), $2)
+      VALUES ('Debited', $1, NOW(), $2)
     `;
-      await pool.query(transactionSenderQry, [amount, senderAccountNo]);
-      console.log('Amount:', amount, 'Type:', typeof amount);
+    await pool.query(transactionSenderQry, [amount, senderAccountNo]);
+    console.log('Amount:', amount, 'Type:', typeof amount);
 
 
-      const transactionReceiverQry = `
+    const transactionReceiverQry = `
       INSERT INTO Transaction (Transaction_Type, Amount, Date_Time, Account_No)
-      VALUES ('Transfer - Credit', $1, NOW(), $2)
+      VALUES ('Credited', $1, NOW(), $2)
     `;
-      await pool.query(transactionReceiverQry, [amount, reciverAccNo]);
-    }
+    await pool.query(transactionReceiverQry, [amount, reciverAccNo]);
 
 
     await pool.query('COMMIT');
@@ -364,17 +376,17 @@ app.get('/api/account-type', verifyToken, async (req, res) => {
 });
 
 app.post('/api/withdraw', verifyToken, async (req, res) => {
-  const { amount, type } = req.body;
+  const { amount, type, pin } = req.body;
   const cardNumber = req.cardNumber;
 
   try {
     await pool.query('BEGIN');
 
     const accountQuery = `
-      SELECT a.Account_No, a.Balance, a.Account_Type
+      SELECT a.Account_No, a.Balance, a.Account_Type, crd.pin
       FROM Account a
       JOIN Card crd ON a.Account_No = crd.Account_No
-      WHERE crd.Card_No = $1 
+      WHERE crd.Card_No = $1
     `;
     const { rows: accountRows } = await pool.query(accountQuery, [cardNumber]);
 
@@ -386,12 +398,20 @@ app.post('/api/withdraw', verifyToken, async (req, res) => {
     const accountNo = accountRows[0].account_no;
     const currentBalance = accountRows[0].balance;
     const accountType = accountRows[0].account_type;
+    const storedHash = accountRows[0].pin;
+
+    const isMatch = await comparePassword(pin, storedHash);
+    if (!isMatch) {
+      await pool.query('ROLLBACK');
+      return res.status(400).json({ message: 'Invalid PIN' });
+    }
 
     if (currentBalance < amount) {
       await pool.query('ROLLBACK');
       return res.status(400).json({ message: 'Insufficient balance' });
     }
 
+    // Deduct balance from the account
     const updateBalanceQuery = `
       UPDATE Account
       SET Balance = Balance - $1
@@ -399,26 +419,31 @@ app.post('/api/withdraw', verifyToken, async (req, res) => {
     `;
     await pool.query(updateBalanceQuery, [amount, accountNo]);
 
+    // Insert withdrawal transaction
     const transactionQuery = `
       INSERT INTO Transaction (Transaction_Type, Amount, Date_Time, Account_No)
       VALUES ('Withdrawal', $1, NOW(), $2)
     `;
     await pool.query(transactionQuery, [amount, accountNo]);
 
+    // Commit the transaction
     await pool.query('COMMIT');
 
+    // Respond with the new balance and account type
     res.json({
       message: 'Withdrawal successful',
       newBalance: currentBalance - amount,
-      accountType: accountType  // Return the account type in the response
+      accountType: accountType
     });
 
   } catch (error) {
+    // Rollback transaction on error
     await pool.query('ROLLBACK');
     console.error('Error during withdrawal:', error.message);
     res.status(500).json({ message: 'Internal server error during withdrawal' });
   }
 });
+
 
 
 app.get('/api/mini-statement', verifyToken, async (req, res) => {
@@ -467,7 +492,7 @@ app.get('/api/mini-statement', verifyToken, async (req, res) => {
       tstatus: row.tstatus
     }));
 
-    const accountInfo = rows[0]; 
+    const accountInfo = rows[0];
     res.json({
       bankName: accountInfo.bankname,
       currentDate: new Date().toLocaleString(),

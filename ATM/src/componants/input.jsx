@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 
-export default function Input({ value, setValue}) {
+export default function Input({ value, setValue }) {
     const [displayValue, setDisplayValue] = useState('');
 
     useEffect(() => {
         const formattedValue = value.replace(/(\d{4})(?=\d)/g, '$1 ');
         setDisplayValue(formattedValue);
-       
+
     }, [value]);
 
     const handleChange = (event) => {

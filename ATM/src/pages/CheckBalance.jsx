@@ -19,6 +19,7 @@ const CheckBalance = () => {
     const fetchReceiptData = async () => {
       const token = localStorage.getItem('token');
       if (!token) {
+        alert('Token has expired. Please log in again.');
         handleTokenExpiry();
         return;
       }
@@ -34,6 +35,7 @@ const CheckBalance = () => {
         setLoading(false);
       } catch (err) {
         if (err.response && (err.response.status === 401 || err.response.status === 403)) {
+          alert('Token has expired. Please log in again.');
           handleTokenExpiry();
         } else {
           console.error('Error fetching receipt data:', err);

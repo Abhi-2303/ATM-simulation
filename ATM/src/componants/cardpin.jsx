@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import Input from './input';
 import Pininp from './pinInp';
-import '../css/cardpin.css';
+import '../css/card.css';
+import '../css/pin.css';
 import { useNavigate } from 'react-router-dom';
 
 function CardPin() {
@@ -10,7 +11,7 @@ function CardPin() {
   const [cardNumber, setCardNumber] = useState("");
   const [pin, setPin] = useState("");
   const [error, setError] = useState("");
-  const [retryAfter, setRetryAfter] = useState(0); // Time remaining before retry is allowed
+  const [retryAfter, setRetryAfter] = useState(0); 
   const navigate = useNavigate();
 
   const titles = ["Enter Card Number", "Enter Your PIN"];
@@ -33,9 +34,9 @@ function CardPin() {
         if (err.response) {
           if (err.response.status === 404) {
             setError('Card not found');
-          } else if (err.response.status === 429) { 
+          } else if (err.response.status === 429) {
             const retryTime = err.response.headers['retry-after'] || 60;
-            setRetryAfter(parseInt(retryTime, 10)); 
+            setRetryAfter(parseInt(retryTime, 10));
             setError(`Too many login attempts. Please try again in ${retryTime} seconds.`);
           } else {
             setError('Error connecting to server');
@@ -57,9 +58,9 @@ function CardPin() {
           if (err.response.status === 400) {
             setError('Invalid PIN');
           } else if (err.response.status === 429) {
-            const retryTime = err.response.headers['retry-after'] || 60; 
+            const retryTime = err.response.headers['retry-after'] || 60;
 
-            setRetryAfter(parseInt(retryTime, 10)); 
+            setRetryAfter(parseInt(retryTime, 10));
             setError(`Too many login attempts. Please try again in ${retryTime} seconds.`);
           } else {
             setError('Error connecting to server');
@@ -101,7 +102,7 @@ function CardPin() {
         </button>
       </div>
       {error && <p className="error">{error}</p>}
-      {retryAfter > 0 && <p className="retry-timer">Retry in {retryAfter} seconds.</p>} 
+      {retryAfter > 0 && <p className="retry-timer">Retry in {retryAfter} seconds.</p>}
     </div>
   );
 }
