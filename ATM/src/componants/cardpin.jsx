@@ -11,7 +11,7 @@ function CardPin() {
   const [cardNumber, setCardNumber] = useState("");
   const [pin, setPin] = useState("");
   const [error, setError] = useState("");
-  const [retryAfter, setRetryAfter] = useState(0); 
+  const [retryAfter, setRetryAfter] = useState(0);
   const navigate = useNavigate();
 
   const titles = ["Enter Card Number", "Enter Your PIN"];
@@ -96,7 +96,8 @@ function CardPin() {
       <div className="input">
         {steps[currentStep]}
       </div>
-      <div className="button">
+      <div className="button-container" style={{ justifyContent: 'center' }}>
+        {currentStep > 0 && <button className="back" onClick={() => setCurrentStep((prevStep) => prevStep - 1)}>Back</button>}
         <button className="continue" onClick={handleNextStep}>
           {currentStep === 1 ? "Submit" : "Continue"}
         </button>

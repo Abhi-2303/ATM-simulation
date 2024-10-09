@@ -35,6 +35,7 @@
 
     .cardNO {
       width: 100%;
+            margin-bottom: 2rem;
     }
 
     .input input:focus {
@@ -43,11 +44,6 @@
       outline: none;
       border-color: #4a90e2;
     }
-
-    .button {
-      margin-top: 2rem;
-    }
-
 
     button:active {
       transform: scale(0.95);

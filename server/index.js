@@ -51,7 +51,7 @@ app.post('/api/login', loginLimiter, async (req, res) => {
       return res.status(400).json({ message: 'Invalid PIN' });
     }
 
-    const token = jwt.sign({ cardNumber: rows[0].card_no }, JWT_KEY, { expiresIn: '10s' });
+    const token = jwt.sign({ cardNumber: rows[0].card_no }, JWT_KEY, { expiresIn: '10m' });
     res.json({ message: 'Login successful!', token });
 
   } catch (error) {
@@ -123,8 +123,9 @@ app.get('/api/dashboard', verifyToken, async (req, res) => {
   }
 });
 
-app.get('/api/balance-receipt', verifyToken, async (req, res) => {
+app.post('/api/balance-receipt', verifyToken, async (req, res) => {
   const cardNumber = req.cardNumber;
+  const {pin} = req.body;
 
   try {
     const accountQuery = `
@@ -134,7 +135,7 @@ app.get('/api/balance-receipt', verifyToken, async (req, res) => {
     a.Balance AS balance,
     b.contact_info,
     b.website,
-
+    crd.pin,
     b.address AS branch_name,
     b.Bank_Name AS bank_name,
     TO_CHAR (CURRENT_TIMESTAMP, 'Mon DD, YYYY HH24:MI:SS') AS current_datetime
@@ -155,6 +156,13 @@ WHERE
     }
 
     const accountData = accountResult.rows[0];
+
+    const storedHash = accountResult.rows[0].pin;
+    const isMatch = await comparePassword(pin, storedHash);
+    if (!isMatch) {
+      await pool.query('ROLLBACK');
+      return res.status(400).json({ message: 'Invalid PIN' });
+    }
 
     res.json({
       bankName: accountData.bank_name,
@@ -206,9 +214,15 @@ app.post('/api/change-pin', verifyToken, async (req, res) => {
       return res.json({ message: 'New PIN is required' });
     }
 
+    const isSamePin = await comparePassword(newPin, storedHash);
+    if (isSamePin) {
+      return res.status(400).json({ message: 'New PIN cannot be the same as the old PIN' });
+    }
+    
     const hashedNewPin = await hashPassword(newPin);
     const updateQuery = 'UPDATE card SET pin = $1 WHERE Card_No = $2';
     await pool.query(updateQuery, [hashedNewPin, cardNumber]);
+
     res.json({ message: 'PIN updated successfully!' });
 
   } catch (error) {
@@ -350,7 +364,6 @@ app.post('/api/transfer', verifyToken, async (req, res) => {
   }
 });
 
-
 app.get('/api/account-type', verifyToken, async (req, res) => {
   const cardNumber = req.cardNumber;
 
@@ -444,11 +457,10 @@ app.post('/api/withdraw', verifyToken, async (req, res) => {
   }
 });
 
-
-
-app.get('/api/mini-statement', verifyToken, async (req, res) => {
+app.post('/api/mini-statement', verifyToken, async (req, res) => {
   try {
     const cardNumber = req.cardNumber;
+    const { pin } = req.body;
 
     const query = `
             SELECT
@@ -462,6 +474,7 @@ app.get('/api/mini-statement', verifyToken, async (req, res) => {
                 b.Contact_Info AS contactInfo,
                 b.Website AS website,
                 b.Address AS branch,
+                crd.pin,
                 a.Balance AS availableBalance
             FROM 
                 Transaction t
@@ -493,6 +506,14 @@ app.get('/api/mini-statement', verifyToken, async (req, res) => {
     }));
 
     const accountInfo = rows[0];
+
+    const storedHash = accountInfo.pin;
+    const isMatch = await comparePassword(pin, storedHash);
+    if (!isMatch) {
+      await pool.query('ROLLBACK');
+      return res.status(400).json({ message: 'Invalid PIN' });
+    }
+
     res.json({
       bankName: accountInfo.bankname,
       currentDate: new Date().toLocaleString(),
@@ -510,7 +531,6 @@ app.get('/api/mini-statement', verifyToken, async (req, res) => {
     res.status(500).json({ message: 'Internal server error' });
   }
 });
-
 
 app.post('/api/deposit', verifyToken, async (req, res) => {
   const { amount } = req.body;

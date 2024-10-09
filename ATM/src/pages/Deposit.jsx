@@ -1,13 +1,15 @@
-import React, { useState, useEffect } from 'react';
-import DepositAmount from '../componants/depositAmount';
-import DepositImg from '../componants/depositImg';
 import DepositConfirm from '../componants/depositConfirm';
+import DepositAmount from '../componants/depositAmount';
+import React, { useState, useEffect } from 'react';
+import DepositImg from '../componants/depositImg';
+import Pininp from '../componants/pinInp';
 import '../css/withdraw.css';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
 const Deposit = () => {
   const [step, setStep] = useState(1);
+  const [pin, setPin] = useState('');
   const [amount, setAmount] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const navigate = useNavigate();
@@ -20,16 +22,18 @@ const Deposit = () => {
       case 1:
         return 'Enter Deposit Amount';
       case 2:
-        return 'Inserting Cash';
-      case 3:
         return 'Confirm Deposit';
+      case 3:
+        return 'Enter PIN';
+      case 4:
+        return 'Inserting Cash';
       default:
         return 'Deposit Funds';
     }
   };
 
   useEffect(() => {
-    if (step === 2) {
+    if (step === 4) {
       const timer = setTimeout(() => {
         nextStep();
       }, 5000);
@@ -47,7 +51,7 @@ const Deposit = () => {
 
   const handleTokenExpiry = () => {
     localStorage.removeItem('token');
-    navigate('/'); 
+    navigate('/');
   };
 
   const handleDeposit = async () => {
@@ -62,12 +66,12 @@ const Deposit = () => {
     try {
       const response = await axios.post(
         '/api/deposit',
-        { amount },
+        { amount, pin },
         { headers: { Authorization: `Bearer ${token}` } }
       );
       nextStep();
       setErrorMessage(response.data.message);
-      if (response.data.message === "Deposit successful"){
+      if (response.data.message === "Deposit successful") {
         alert('Deposit successful');
         navigate('/dashboard');
       }
@@ -91,8 +95,10 @@ const Deposit = () => {
             onAmountChange={handleAmountChange}
           />
         )}
-        {step === 2 && <DepositImg />}
-        {step === 3 && <DepositConfirm amount={amount} />}
+        {step === 2 && <DepositConfirm amount={amount} />}
+        {step === 3 && <Pininp value={pin} setValue={setPin} />}
+  
+        {step === 4 && <DepositImg />}
       </div>
       <div className="button-container">
         {step === 1 && (
@@ -101,15 +107,21 @@ const Deposit = () => {
             onClick={nextStep}
             disabled={!amount || amount <= 0}
           >
-            Insert Cash
+            Continue
           </button>
         )}
-        {step === 3 && (
+        {step === 2 && (
           <>
             <button className="back" onClick={prevStep}>Back</button>
-            <button className="continue" onClick={handleDeposit}>Confirm</button>
+            <button className="continue" onClick={nextStep}>Confirm</button>
           </>
         )}
+        {step === 3 && (
+          <button className="continue" onClick={handleDeposit}>
+            Submit PIN
+          </button>
+        )}
+        
       </div>
       {errorMessage && <p className="error">{errorMessage}</p>}
     </div>
