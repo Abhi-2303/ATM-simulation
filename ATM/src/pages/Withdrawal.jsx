@@ -111,6 +111,9 @@ const Withdrawal = () => {
                 <Pininp value={pin} setValue={setPin} />
             )}
             <div className="button-container">
+                {step === 1 && <button className="back"
+                    onClick={() => navigate(-1)}
+                >  Go Back</button>}
                 {step > 1 && <button className="back" onClick={prevStep}>Back</button>}
                 {step === 1 && (
                     <button

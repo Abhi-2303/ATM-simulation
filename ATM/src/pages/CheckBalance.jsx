@@ -9,7 +9,7 @@ const CheckBalance = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [pin, setPin] = useState('');
-  const [pinSubmitted, setPinSubmitted] = useState(false); 
+  const [pinSubmitted, setPinSubmitted] = useState(false);
 
   const navigate = useNavigate();
 
@@ -77,6 +77,9 @@ const CheckBalance = () => {
         <h2>Enter PIN</h2>
         <Pininp value={pin} setValue={setPin} />
         <div className="button-container">
+          <button className="back"
+            onClick={() => navigate(-1)}
+          >  Go Back</button>
           <button onClick={handleSubmitPin} className='continue' style={{ margin: 'auto' }}>Submit PIN</button>
         </div>
         {error && <p className="error">{error}</p>}

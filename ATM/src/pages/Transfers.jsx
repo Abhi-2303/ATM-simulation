@@ -34,7 +34,7 @@ const Transfer = () => {
             bank: transferData.bank,
             name: transferData.beneficiaryName,
             reciverAccNo: transferData.accountNumber,
-            ...(step === 5 && { amount: transferData.amount, pin: pin})
+            ...(step === 5 && { amount: transferData.amount, pin: pin })
           }, {
             headers: {
               'Content-Type': 'application/json',
@@ -46,7 +46,7 @@ const Transfer = () => {
             setErrorMessage(response.data.message);
           } else if (response.data.message === 'Invalid amount') {
             setErrorMessage(response.data.message);
-          } 
+          }
           else if (response.data.message === 'Transfer successful') {
             alert(response.data.message);
             navigate('/dashboard');
@@ -143,6 +143,11 @@ const Transfer = () => {
         )}
       </div>
       <div className="button-container">
+        {step === 1 && <button className="back"
+          onClick={() => navigate(-1)}
+        >
+          Go Back
+        </button>}
         {step > 1 && <button className="back" onClick={prevStep}>Back</button>}
         <button className="continue" onClick={nextStep}>
           {step === 5 ? 'Submit' : step < 4 ? 'Continue' : 'Confirm'}

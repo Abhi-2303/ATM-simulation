@@ -15,7 +15,7 @@ const Deposit = () => {
   const navigate = useNavigate();
 
   const nextStep = () => setStep((prevStep) => prevStep + 1);
-  const prevStep = () => setStep((prevStep) => prevStep - 2);
+  const prevStep = () => setStep((prevStep) => prevStep - 1);
 
   const getTitle = () => {
     switch (step) {
@@ -97,18 +97,27 @@ const Deposit = () => {
         )}
         {step === 2 && <DepositConfirm amount={amount} />}
         {step === 3 && <Pininp value={pin} setValue={setPin} />}
-  
         {step === 4 && <DepositImg />}
       </div>
       <div className="button-container">
         {step === 1 && (
-          <button
-            className="continue"
-            onClick={nextStep}
-            disabled={!amount || amount <= 0}
-          >
-            Continue
-          </button>
+          <>
+            <button className="back"
+              onClick={() => navigate(-1)}
+            >
+              Go Back
+            </button>
+            <button className="continue"
+              onClick={() => {
+                (!amount || amount <= 0)
+                  ? setErrorMessage('Please enter a valid amount')
+                  : nextStep();
+              }}
+            >
+              Continue
+            </button>
+          </>
+
         )}
         {step === 2 && (
           <>
@@ -121,7 +130,7 @@ const Deposit = () => {
             Submit PIN
           </button>
         )}
-        
+
       </div>
       {errorMessage && <p className="error">{errorMessage}</p>}
     </div>

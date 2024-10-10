@@ -82,6 +82,10 @@ const MiniStatements = () => {
                     <h2>Enter PIN </h2>
                     <Pininp value={pin} setValue={setPin} />
                     <div className="button-container">
+                        <button className="back"
+                            onClick={() => navigate(-1)}
+                        >Go Back</button>
+
                         <button onClick={handleSubmit} className='continue' style={{ margin: '0 auto' }}>Submit PIN</button>
                     </div>
                     {error && <p className="error">{error}</p>}

@@ -111,7 +111,12 @@ function ChangePIN() {
           setValue={handlePinInput}
         />
       </div>
-      <div className="button">
+      <div className="button-container">
+        {step === 0 && <button className="back"
+          onClick={() => navigate(-1)}
+        >
+          Go Back
+        </button>}
         <button onClick={handleContinue} className="continue">
           {step === 2 ? 'Submit' : 'Continue'}
         </button>
