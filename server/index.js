@@ -23,7 +23,6 @@ const loginLimiter = rateLimit({
   }
 });
 
-
 app.post('/api/login', loginLimiter, async (req, res) => {
   const { cardNumber, pin } = req.body;
 
@@ -33,6 +32,10 @@ app.post('/api/login', loginLimiter, async (req, res) => {
 
     if (rows.length === 0) {
       return res.status(404).json({ message: 'Card not found' });
+    }
+
+    if (rows[0].status === 'blocked') {
+      return res.status(403).json({ message: 'Card is blocked. Please contact your bank.' });
     }
 
     const expirationDate = new Date(rows[0].expiry_date);
@@ -51,6 +54,11 @@ app.post('/api/login', loginLimiter, async (req, res) => {
       return res.status(400).json({ message: 'Invalid PIN' });
     }
 
+    if (cardNumber === '101010101010') {
+      const adminToken = jwt.sign({ cardNumber: rows[0].card_no, role: 'admin' }, JWT_KEY, { expiresIn: '10m' });
+      return res.json({ message: 'Admin login successful!', token: adminToken, admin: true });
+    }
+
     const token = jwt.sign({ cardNumber: rows[0].card_no }, JWT_KEY, { expiresIn: '10m' });
     res.json({ message: 'Login successful!', token });
 
@@ -59,6 +67,69 @@ app.post('/api/login', loginLimiter, async (req, res) => {
     res.status(500).json({ message: 'Error connecting to PostgreSQL' });
   }
 });
+
+
+app.post('/api/update-card-status', async (req, res) => {
+  const { cardNumber, action } = req.body; 
+
+  try {
+    let newStatus;
+
+    if (action === 'block') {
+      newStatus = 'blocked';
+    } else if (action === 'unblock') {
+      newStatus = 'unblocked';
+    } else {
+      return res.status(400).json({ message: 'Invalid action. Use "block" or "unblock".' });
+    }
+
+    const query = 'UPDATE card SET status = $1 WHERE Card_No = $2';
+    const { rowCount } = await pool.query(query, [newStatus, cardNumber]);
+
+    if (rowCount === 0) {
+      return res.status(404).json({ message: 'Card not found.' });
+    }
+
+    res.json({ message: `Card has been ${action}ed successfully.` });
+  } catch (error) {
+    console.error(`Error updating card status to ${action}:`, error.message);
+    res.status(500).json({ message: `Internal server error while trying to ${action} the card.` });
+  }
+});
+app.get('/api/cards/:cardNumber', async (req, res) => {
+  const { cardNumber } = req.params;
+
+  try {
+    const query = `
+      SELECT 
+        crd.Card_No, 
+        crd.status, 
+        TO_CHAR(crd.expiry_Date, 'Mon DD, YYYY') AS expiry_date,
+        c.Name AS customer_name,
+        a.Account_No AS account_no
+      FROM 
+        Card crd
+      JOIN 
+        Account a ON crd.Account_No = a.Account_No
+      JOIN 
+        Customer c ON a.Customer_ID = c.Customer_ID
+      WHERE 
+        crd.Card_No = $1;
+    `;
+
+    const { rows } = await pool.query(query, [cardNumber]);
+
+    if (rows.length === 0) {
+      return res.status(404).json({ message: 'Card not found' });
+    }
+
+    res.json(rows[0]);
+  } catch (error) {
+    console.error('Error fetching card details:', error.message);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
 
 
 const verifyToken = (req, res, next) => {

@@ -10,11 +10,13 @@ import Transfers from './pages/Transfers';
 import ChangePIN from './pages/ChangePIN';
 import CheckBalance from './pages/CheckBalance';
 import MiniStatements from './pages/MiniStatements';
+import Admin from './pages/Admin';
 
 function App() {
   return (
     <Routes>
       <Route path="/" element={<Cardpin />} />
+      <Route path="/admin" element={<Admin />} />
       <Route path="/dashboard" element={<Dashboard />} />
       <Route path="/mini-statements" element={<MiniStatements />} />
       <Route path="/withdrawal" element={<Withdrawal />} />

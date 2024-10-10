@@ -21,9 +21,8 @@ function CardPin() {
       try {
         const response = await axios.post('/api/login', { cardNumber });
 
-        // Check for expired card
         if (response.data.message === 'Card is expired') {
-          setError(response.data.message);
+          setError("Card expired. Please contact your bank.");
         }
 
         if (response.status === 200 && response.data.message === 'Card found, please enter your PIN') {
@@ -33,16 +32,18 @@ function CardPin() {
       } catch (err) {
         if (err.response) {
           if (err.response.status === 404) {
-            setError('Card not found');
+            setError("Card not found. Please verify the number and try again.");
+          }else if (err.response.status === 403) {
+            setError(err.response.data.message);
           } else if (err.response.status === 429) {
             const retryTime = err.response.headers['retry-after'] || 60;
             setRetryAfter(parseInt(retryTime, 10));
-            setError(`Too many login attempts. Please try again in ${retryTime} seconds.`);
+            setError(`Too many attempts. Please wait ${retryTime} seconds before trying again.`);
           } else {
-            setError('Error connecting to server');
+            setError("Connection error. Please try again later.");
           }
         } else {
-          setError('Error connecting to server');
+          setError("Connection failed. Please check your internet.");
         }
       }
     } else if (currentStep === 1 && pin.length === 4) {
@@ -51,26 +52,31 @@ function CardPin() {
 
         if (response.status === 200) {
           localStorage.setItem('token', response.data.token);
-          navigate('/dashboard');
+          if (response.data.admin) {
+            navigate('/admin');
+          } else {
+            navigate('/dashboard');
+          }
         }
       } catch (err) {
         if (err.response) {
           if (err.response.status === 400) {
-            setError('Invalid PIN');
+            setError('Incorrect PIN. Please try again.');
           } else if (err.response.status === 429) {
             const retryTime = err.response.headers['retry-after'] || 60;
-
             setRetryAfter(parseInt(retryTime, 10));
-            setError(`Too many login attempts. Please try again in ${retryTime} seconds.`);
+            setError(`Too many attempts. Please wait ${retryTime} seconds before trying again.`);
+          } else if (err.response.status === 403) {
+            setError(err.response.data.message);
           } else {
-            setError('Error connecting to server');
+            setError('Connection error. Please try again later.');
           }
         } else {
-          setError('Error connecting to server');
+          setError('Connection failed. Please check your internet.');
         }
       }
     } else {
-      setError("Please complete the required input");
+      setError("Please complete the required input.");
     }
   };
 
@@ -103,7 +109,7 @@ function CardPin() {
         </button>
       </div>
       {error && <p className="error">{error}</p>}
-      {retryAfter > 0 && <p className="retry-timer">Retry in {retryAfter} seconds.</p>}
+      {retryAfter > 0 && <p className="retry-timer">Please wait {retryAfter} seconds.</p>}
     </div>
   );
 }
