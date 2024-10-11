@@ -4,7 +4,7 @@ import WithdrawConfirm from '../componants/withdrawConfirm';
 import Pininp from '../componants/pinInp';
 import '../css/Withdraw.css';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom'
 
 const Withdrawal = () => {
     const navigate = useNavigate();
@@ -25,6 +25,11 @@ const Withdrawal = () => {
     const handleAmountSelection = async (amount) => {
         if (!amount || isNaN(amount) || Number(amount) <= 0) {
             setErrorMessage('Please enter a valid amount.');
+            return;
+        }
+
+        if (amount > 20000) {
+            setErrorMessage('Maximum withdrawal limit is ₹20,000');
             return;
         }
 

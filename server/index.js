@@ -349,15 +349,7 @@ app.post('/api/transfer', verifyToken, async (req, res) => {
       await pool.query('ROLLBACK');
       return res.status(400).json({ message: 'You cannot transfer money to your own account' });
     }
-    
-    if (pin) {
-      const storedHash = senderRows[0].pin;
-      const isMatch = await comparePassword(pin, storedHash);
-      if (!isMatch) {
-        await pool.query('ROLLBACK');
-        return res.status(400).json({ message: 'Invalid PIN' });
-      }
-    }
+    const storedHash = senderRows[0].pin;
 
     const receiverAccQuery = `
       SELECT a.Account_No, c.Name, b.Bank_Name
@@ -380,8 +372,6 @@ app.post('/api/transfer', verifyToken, async (req, res) => {
       return res.json({ message: 'The selected bank does not correspond to the beneficiary’s bank.' });
     }
 
-
-
     if (senderBalance < amount) {
       await pool.query('ROLLBACK');
       return res.status(400).json({ message: 'Insufficient balance' });
@@ -394,6 +384,12 @@ app.post('/api/transfer', verifyToken, async (req, res) => {
     if (isNaN(amount) || amount <= 0) {
       await pool.query('ROLLBACK');
       return res.json({ message: 'Invalid amount' });
+    }
+ 
+    const isMatch = await comparePassword(pin, storedHash);
+    if (!isMatch) {
+      await pool.query('ROLLBACK');
+      return res.status(400).json({ message: 'Invalid PIN' });
     }
 
     const deductSender = `
@@ -415,8 +411,6 @@ app.post('/api/transfer', verifyToken, async (req, res) => {
       VALUES ('Debited', $1, NOW(), $2)
     `;
     await pool.query(transactionSenderQry, [amount, senderAccountNo]);
-    console.log('Amount:', amount, 'Type:', typeof amount);
-
 
     const transactionReceiverQry = `
       INSERT INTO Transaction (Transaction_Type, Amount, Date_Time, Account_No)
@@ -462,6 +456,7 @@ app.get('/api/account-type', verifyToken, async (req, res) => {
 app.post('/api/withdraw', verifyToken, async (req, res) => {
   const { amount, type, pin } = req.body;
   const cardNumber = req.cardNumber;
+  const dailyLimit = 50000; 
 
   try {
     await pool.query('BEGIN');
@@ -490,12 +485,27 @@ app.post('/api/withdraw', verifyToken, async (req, res) => {
       return res.status(400).json({ message: 'Invalid PIN' });
     }
 
+    const today = new Date().toISOString().slice(0, 10);
+    const dailyTransactionQuery = `
+      SELECT COALESCE(SUM(Amount), 0) AS total_today
+      FROM Transaction
+      WHERE Account_No = $1
+      AND Transaction_Type = 'Withdrawal'
+      AND Date_Time::date = $2
+    `;
+    const { rows: dailyRows } = await pool.query(dailyTransactionQuery, [accountNo, today]);
+    const totalToday = dailyRows[0].total_today;
+
+    if (totalToday + amount > dailyLimit) {
+      await pool.query('ROLLBACK');
+      return res.status(400).json({ message: `Daily limit of ₹${dailyLimit} exceeded. You've withdrawn ₹${totalToday} today.` });
+    }
+
     if (currentBalance < amount) {
       await pool.query('ROLLBACK');
       return res.status(400).json({ message: 'Insufficient balance' });
     }
 
-    // Deduct balance from the account
     const updateBalanceQuery = `
       UPDATE Account
       SET Balance = Balance - $1
@@ -503,17 +513,14 @@ app.post('/api/withdraw', verifyToken, async (req, res) => {
     `;
     await pool.query(updateBalanceQuery, [amount, accountNo]);
 
-    // Insert withdrawal transaction
     const transactionQuery = `
       INSERT INTO Transaction (Transaction_Type, Amount, Date_Time, Account_No)
       VALUES ('Withdrawal', $1, NOW(), $2)
     `;
     await pool.query(transactionQuery, [amount, accountNo]);
 
-    // Commit the transaction
     await pool.query('COMMIT');
 
-    // Respond with the new balance and account type
     res.json({
       message: 'Withdrawal successful',
       newBalance: currentBalance - amount,
@@ -521,7 +528,6 @@ app.post('/api/withdraw', verifyToken, async (req, res) => {
     });
 
   } catch (error) {
-    // Rollback transaction on error
     await pool.query('ROLLBACK');
     console.error('Error during withdrawal:', error.message);
     res.status(500).json({ message: 'Internal server error during withdrawal' });
